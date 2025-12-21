@@ -1159,7 +1159,7 @@ export default function RegisterPage () {
             {/* Footer */}
             <div className='mt-4 text-center'>
               <p className='text-xs text-gray-500'>
-                © 2024 Bosshype Store • Fashion Digital Terpercaya
+                © 2025 Bosshype Store • Fashion Digital Terpercaya
               </p>
             </div>
           </div>

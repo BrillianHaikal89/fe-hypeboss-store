@@ -19,7 +19,8 @@ import {
   X,
   CheckCircle,
   XCircle,
-  Info
+  Info,
+  ArrowLeft // <-- Tambahkan ini
 } from "lucide-react";
 import { useAuthStore } from "../../store/auth-store";
 import ProductModal from "./components/productModal";
@@ -434,9 +435,20 @@ export default function ProductsPage() {
           {/* Header */}
           <div className="mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Manajemen Produk</h1>
-                <p className="text-gray-700 mt-1 font-medium">Kelola produk Anda di sini</p>
+              <div className="flex items-center w-full md:w-auto">
+                {/* Tombol Kembali untuk Mobile */}
+                <button
+                  onClick={() => router.back()}
+                  className="md:hidden flex items-center justify-center mr-3 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700"
+                  title="Kembali"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Manajemen Produk</h1>
+                  <p className="text-gray-700 mt-1 font-medium">Kelola produk Anda di sini</p>
+                </div>
               </div>
               <button
                 onClick={handleAddProduct}

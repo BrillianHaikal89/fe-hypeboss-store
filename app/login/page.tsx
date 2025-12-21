@@ -1,3 +1,4 @@
+// app/login/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -577,7 +578,7 @@ export default function LoginPage() {
             {/* Mobile Footer */}
             <div className="mt-8 text-center lg:hidden">
               <p className="text-sm text-gray-500">
-                © 2024 Bosshype Store • Fashion Digital Terpercaya
+                © 2025 Bosshype Store • Fashion Digital Terpercaya
               </p>
             </div>
           </div>
@@ -587,7 +588,7 @@ export default function LoginPage() {
       {/* Desktop Footer */}
       <div className="hidden lg:flex absolute bottom-4 left-0 right-0 justify-center">
         <p className="text-sm text-gray-500">
-          © 2024 Bosshype Store • Menjual berbagai produk pakaian berkualitas • 
+          © 2025 Bosshype Store • Menjual berbagai produk pakaian berkualitas • 
           <span className="text-emerald-600 font-medium"> Baju • Celana • Topi • Sepatu</span>
         </p>
       </div>

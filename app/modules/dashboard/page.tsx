@@ -1,148 +1,161 @@
+// app/modules/dashboard/page.tsx
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Package,
   ShoppingCart,
   DollarSign,
   Users,
-  TrendingUp,
-  TrendingDown,
-  MoreVertical,
-  Star,
-  Clock,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
   Plus,
   Eye,
-  AlertCircle,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon
+  AlertCircle
 } from 'lucide-react'
 import { useAuthStore } from '../../store/auth-store'
+import DashboardCustomer from './components/dashboardCustomer'
 
-// Data dummy produk
-const products = [
-  {
-    id: 1,
-    name: 'Smartphone Pro',
-    price: 2499000,
-    stock: 45,
-    sold: 128,
-    rating: 4.8,
-    category: 'Elektronik'
-  },
-  {
-    id: 2,
-    name: 'Headphone Wireless',
-    price: 599000,
-    stock: 23,
-    sold: 89,
-    rating: 4.5,
-    category: 'Aksesoris'
-  },
-  {
-    id: 3,
-    name: 'Smart Watch',
-    price: 1299000,
-    stock: 15,
-    sold: 42,
-    rating: 4.3,
-    category: 'Wearable'
-  },
-  {
-    id: 4,
-    name: 'Laptop Gaming',
-    price: 14999000,
-    stock: 8,
-    sold: 12,
-    rating: 4.9,
-    category: 'Elektronik'
-  },
-  {
-    id: 5,
-    name: 'Mouse Gaming',
-    price: 349000,
-    stock: 67,
-    sold: 156,
-    rating: 4.6,
-    category: 'Aksesoris'
-  },
-  {
-    id: 6,
-    name: 'Keyboard Mechanical',
-    price: 899000,
-    stock: 32,
-    sold: 78,
-    rating: 4.7,
-    category: 'Aksesoris'
-  },
-  {
-    id: 7,
-    name: 'Monitor 4K',
-    price: 5499000,
-    stock: 12,
-    sold: 24,
-    rating: 4.8,
-    category: 'Elektronik'
-  },
-  {
-    id: 8,
-    name: 'Power Bank',
-    price: 299000,
-    stock: 89,
-    sold: 234,
-    rating: 4.4,
-    category: 'Aksesoris'
-  }
-]
+// Types untuk produk dan kategori
+interface Product {
+  id: number
+  name: string
+  description: string
+  category_id: number
+  price: string
+  discount_price: string | null
+  stock: number
+  image: string
+  is_featured: boolean
+  is_active: boolean
+  created_at: string
+  category_name: string
+}
 
-// Data statistik
-const stats = [
+interface Category {
+  id: number
+  name: string
+  description: string
+  image: string
+  is_active: boolean
+  created_at: string
+}
+
+// Data statistik untuk admin
+const getInitialStats = () => [
   {
     label: 'Total Produk',
-    value: '24',
+    value: '0',
     icon: Package,
-    change: '+2',
-    trend: 'up',
+    change: '+0',
+    trend: 'up' as const,
     color: 'bg-blue-500'
   },
   {
-    label: 'Pesanan Hari Ini',
-    value: '8',
+    label: 'Total Kategori',
+    value: '0',
     icon: ShoppingCart,
-    change: '+15%',
-    trend: 'up',
+    change: '+0',
+    trend: 'up' as const,
     color: 'bg-green-500'
   },
   {
     label: 'Pendapatan Bulan Ini',
-    value: 'Rp 12.5 JT',
+    value: 'Rp 0',
     icon: DollarSign,
-    change: '+23%',
-    trend: 'up',
+    change: '+0%',
+    trend: 'up' as const,
     color: 'bg-purple-500'
   },
   {
     label: 'Pelanggan Baru',
-    value: '42',
+    value: '0',
     icon: Users,
-    change: '+8',
-    trend: 'up',
+    change: '+0',
+    trend: 'up' as const,
     color: 'bg-orange-500'
   }
 ]
 
-export default function DashboardPage () {
+export default function DashboardPage() {
   const router = useRouter()
   const { user, isLoading } = useAuthStore()
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [stats, setStats] = useState(getInitialStats)
+  const [isLoadingData, setIsLoadingData] = useState(true)
 
+  // Gunakan useMemo untuk lowStockProducts
+  const lowStockProducts = useMemo(() => {
+    return products.filter(product => product.stock < 20)
+  }, [products])
+
+  // Fetch data dari API
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user || isLoading) return
+      
+      try {
+        setIsLoadingData(true)
+        
+        // Fetch produk aktif
+        const productsResponse = await fetch('http://localhost:3001/api/products')
+        const productsData = await productsResponse.json()
+        
+        if (productsData.success) {
+          setProducts(productsData.data)
+        }
+
+        // Fetch kategori aktif
+        const categoriesResponse = await fetch('http://localhost:3001/api/categories')
+        const categoriesData = await categoriesResponse.json()
+        
+        if (categoriesData.success) {
+          setCategories(categoriesData.data)
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setIsLoadingData(false)
+      }
+    }
+
+    fetchData()
+  }, [user, isLoading])
+
+  // Update statistik untuk admin
+  useEffect(() => {
+    if (!isLoadingData && user?.role === 'admin') {
+      setStats(prev => prev.map(stat => {
+        if (stat.label === 'Total Produk') {
+          return { ...stat, value: products.length.toString() }
+        }
+        if (stat.label === 'Total Kategori') {
+          return { ...stat, value: categories.length.toString() }
+        }
+        return stat
+      }))
+    }
+  }, [products, categories, isLoadingData, user])
+
+  // Redirect jika tidak login
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login')
     }
   }, [user, isLoading, router])
 
-  if (isLoading) {
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(amount)
+  }
+
+  if (isLoading || isLoadingData) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
         <div className='text-center'>
@@ -157,20 +170,21 @@ export default function DashboardPage () {
     return null
   }
 
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount)
+  // Dashboard untuk Customer
+  if (user.role === 'customer') {
+    return (
+      <DashboardCustomer 
+        products={products}
+        categories={categories}
+        isLoadingData={isLoadingData}
+      />
+    )
   }
 
+  // Dashboard untuk Admin
   return (
     <div className='min-h-screen bg-gray-50'>
-      {/* Main Content */}
       <main className='pt-16 md:pt-20'>
-        {' '}
-        {/* Menambahkan padding-top untuk menghindari navbar */}
         <div className='px-4 md:px-6 lg:px-8 py-4 md:py-6'>
           {/* Welcome Banner */}
           <div className='mb-6 md:mb-8'>
@@ -255,13 +269,16 @@ export default function DashboardPage () {
               <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 md:gap-4'>
                 <div className='space-y-1'>
                   <h2 className='text-lg md:text-xl lg:text-2xl font-bold text-gray-800'>
-                    Produk Terlaris
+                    Produk Terbaru
                   </h2>
                   <p className='text-gray-500 text-xs md:text-sm'>
-                    Produk dengan penjualan tertinggi bulan ini
+                    Produk yang baru ditambahkan
                   </p>
                 </div>
-                <button className='flex items-center space-x-2 text-green-600 hover:text-green-700 font-medium text-sm md:text-base transition-colors'>
+                <button 
+                  onClick={() => router.push('/modules/products')}
+                  className='flex items-center space-x-2 text-green-600 hover:text-green-700 font-medium text-sm md:text-base transition-colors'
+                >
                   <span>Lihat Semua</span>
                   <Eye className='w-4 h-4 md:w-5 md:h-5' />
                 </button>
@@ -285,10 +302,7 @@ export default function DashboardPage () {
                       Stok
                     </th>
                     <th className='text-left p-3 md:p-4 font-semibold text-gray-700 text-xs md:text-sm min-w-[120px]'>
-                      Terjual
-                    </th>
-                    <th className='text-left p-3 md:p-4 font-semibold text-gray-700 text-xs md:text-sm min-w-[120px]'>
-                      Rating
+                      Status
                     </th>
                     <th className='text-left p-3 md:p-4 font-semibold text-gray-700 text-xs md:text-sm min-w-[60px]'>
                       Aksi
@@ -296,15 +310,23 @@ export default function DashboardPage () {
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-gray-100'>
-                  {products.map(product => (
+                  {products.slice(0, 5).map(product => (
                     <tr
                       key={product.id}
                       className='hover:bg-gray-50 transition-colors'
                     >
                       <td className='p-3 md:p-4'>
                         <div className='flex items-center space-x-3'>
-                          <div className='w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-lg flex items-center justify-center'>
-                            <Package className='w-4 h-4 md:w-5 md:h-5 text-gray-600' />
+                          <div className='w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden'>
+                            <img 
+                              src={product.image} 
+                              alt={product.name}
+                              className='w-full h-full object-cover'
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'
+                              }}
+                            />
                           </div>
                           <div>
                             <p className='font-medium text-gray-800 text-sm md:text-base'>
@@ -318,50 +340,57 @@ export default function DashboardPage () {
                       </td>
                       <td className='p-3 md:p-4'>
                         <span className='inline-flex items-center px-2.5 py-1 rounded-full text-xs md:text-sm font-medium bg-gray-100 text-gray-800'>
-                          {product.category}
+                          {product.category_name}
                         </span>
                       </td>
                       <td className='p-3 md:p-4'>
                         <div className='font-semibold text-gray-800 text-sm md:text-base'>
-                          {formatRupiah(product.price)}
+                          {formatRupiah(parseFloat(product.price))}
                         </div>
+                        {product.discount_price && (
+                          <div className='text-sm text-red-500 line-through'>
+                            {formatRupiah(parseFloat(product.discount_price))}
+                          </div>
+                        )}
                       </td>
                       <td className='p-3 md:p-4'>
                         <div className='flex items-center space-x-1'>
-                          <span className='font-semibold text-gray-800 text-sm md:text-base'>
+                          <span className={`font-semibold text-sm md:text-base ${
+                            product.stock < 10 ? 'text-red-600' : 
+                            product.stock < 20 ? 'text-yellow-600' : 
+                            'text-gray-800'
+                          }`}>
                             {product.stock}
                           </span>
                           <span className='text-gray-500 text-xs'>unit</span>
                         </div>
                       </td>
                       <td className='p-3 md:p-4'>
-                        <div className='flex items-center space-x-1'>
-                          <span className='font-semibold text-gray-800 text-sm md:text-base'>
-                            {product.sold}
-                          </span>
-                          <span className='text-gray-500 text-xs'>terjual</span>
-                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                          product.is_active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {product.is_active ? 'Aktif' : 'Tidak Aktif'}
+                        </span>
                       </td>
                       <td className='p-3 md:p-4'>
-                        <div className='flex items-center space-x-2'>
-                          <div className='flex items-center'>
-                            <Star className='w-4 h-4 text-yellow-500 fill-current' />
-                            <span className='ml-1 font-semibold text-gray-800 text-sm md:text-base'>
-                              {product.rating}
-                            </span>
-                          </div>
-                          <span className='text-gray-500 text-xs md:text-sm'>
-                            /5.0
-                          </span>
-                        </div>
-                      </td>
-                      <td className='p-3 md:p-4'>
-                        <button className='p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors'>
-                          <MoreVertical className='w-4 h-4 md:w-5 md:h-5 text-gray-500' />
+                        <button 
+                          onClick={() => router.push(`/modules/products/edit/${product.id}`)}
+                          className='p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors'
+                        >
+                          <Eye className='w-4 h-4 md:w-5 md:h-5 text-gray-500' />
                         </button>
                       </td>
                     </tr>
                   ))}
+                  {products.length === 0 && !isLoadingData && (
+                    <tr>
+                      <td colSpan={6} className='p-6 text-center text-gray-500'>
+                        Tidak ada produk tersedia
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -369,95 +398,67 @@ export default function DashboardPage () {
 
           {/* Bottom Section */}
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6'>
-            {/* Recent Orders */}
+            {/* Categories Overview */}
             <div className='bg-white rounded-xl shadow-sm overflow-hidden'>
               <div className='px-4 md:px-6 py-4 md:py-5 border-b border-gray-100'>
                 <div className='flex items-center justify-between'>
                   <div className='space-y-1'>
                     <h3 className='text-base md:text-lg font-bold text-gray-800'>
-                      Pesanan Terbaru
+                      Kategori Produk
                     </h3>
                     <p className='text-gray-500 text-xs md:text-sm'>
-                      Pesanan yang baru masuk
+                      Daftar kategori yang tersedia
                     </p>
                   </div>
                   <div className='p-2 bg-blue-50 rounded-lg'>
-                    <Clock className='w-4 h-4 md:w-5 md:h-5 text-blue-500' />
+                    <Package className='w-4 h-4 md:w-5 md:h-5 text-blue-500' />
                   </div>
                 </div>
               </div>
               <div className='p-2'>
-                {[
-                  {
-                    id: 'ORD-001',
-                    customer: 'John Doe',
-                    amount: 2499000,
-                    status: 'diproses'
-                  },
-                  {
-                    id: 'ORD-002',
-                    customer: 'Jane Smith',
-                    amount: 899000,
-                    status: 'dikirim'
-                  },
-                  {
-                    id: 'ORD-003',
-                    customer: 'Bob Johnson',
-                    amount: 5499000,
-                    status: 'selesai'
-                  },
-                  {
-                    id: 'ORD-004',
-                    customer: 'Alice Brown',
-                    amount: 299000,
-                    status: 'pending'
-                  },
-                  {
-                    id: 'ORD-005',
-                    customer: 'Michael Lee',
-                    amount: 1299000,
-                    status: 'dikirim'
-                  }
-                ].map(order => (
+                {categories.slice(0, 5).map(category => (
                   <div
-                    key={order.id}
+                    key={category.id}
                     className='flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer'
+                    onClick={() => router.push(`/modules/categories/edit/${category.id}`)}
                   >
-                    <div className='space-y-1'>
-                      <div className='flex items-center space-x-3'>
-                        <div className='w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center'>
-                          <ShoppingCart className='w-3 h-3 md:w-4 md:h-4 text-gray-600' />
-                        </div>
-                        <div>
-                          <p className='font-medium text-gray-800 text-sm md:text-base'>
-                            {order.id}
-                          </p>
-                          <p className='text-gray-500 text-xs md:text-sm'>
-                            {order.customer}
-                          </p>
-                        </div>
+                    <div className='flex items-center space-x-3'>
+                      <div className='w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden'>
+                        <img 
+                          src={category.image} 
+                          alt={category.name}
+                          className='w-full h-full object-cover'
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+                          }}
+                        />
+                      </div>
+                      <div className='space-y-1'>
+                        <p className='font-medium text-gray-800 text-sm md:text-base'>
+                          {category.name}
+                        </p>
+                        <p className='text-gray-500 text-xs md:text-sm truncate max-w-[150px]'>
+                          {category.description || 'Tidak ada deskripsi'}
+                        </p>
                       </div>
                     </div>
-                    <div className='text-right space-y-1'>
-                      <p className='font-bold text-gray-800 text-base md:text-lg'>
-                        {formatRupiah(order.amount)}
-                      </p>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                          order.status === 'selesai'
-                            ? 'bg-green-100 text-green-800'
-                            : order.status === 'dikirim'
-                            ? 'bg-blue-100 text-blue-800'
-                            : order.status === 'diproses'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {order.status}
+                    <div className='text-right'>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        category.is_active 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {category.is_active ? 'Aktif' : 'Tidak Aktif'}
                       </span>
                     </div>
                   </div>
                 ))}
+                {categories.length === 0 && !isLoadingData && (
+                  <div className='text-center py-6 text-gray-500'>
+                    Tidak ada kategori tersedia
+                  </div>
+                )}
               </div>
             </div>
 
@@ -475,7 +476,7 @@ export default function DashboardPage () {
                   </div>
                   <div className='flex items-center space-x-2'>
                     <div className='px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs md:text-sm font-medium'>
-                      4 produk
+                      {lowStockProducts.length} produk
                     </div>
                     <div className='p-2 bg-red-50 rounded-lg'>
                       <AlertCircle className='w-4 h-4 md:w-5 md:h-5 text-red-500' />
@@ -484,55 +485,69 @@ export default function DashboardPage () {
                 </div>
               </div>
               <div className='p-2'>
-                {products
-                  .filter(p => p.stock < 20)
-                  .map(product => (
-                    <div
-                      key={product.id}
-                      className='flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer'
-                    >
-                      <div className='flex items-center space-x-3'>
-                        <div className='w-8 h-8 md:w-10 md:h-10 bg-red-50 rounded-lg flex items-center justify-center'>
-                          <Package className='w-4 h-4 md:w-5 md:h-5 text-red-500' />
-                        </div>
-                        <div className='space-y-1'>
-                          <p className='font-medium text-gray-800 text-sm md:text-base'>
-                            {product.name}
-                          </p>
-                          <div className='flex items-center space-x-2'>
-                            <span className='text-gray-500 text-xs md:text-sm'>
-                              {product.category}
-                            </span>
-                            <span className='text-gray-300'>•</span>
-                            <span className='text-gray-500 text-xs md:text-sm'>
-                              ID: PROD{product.id.toString().padStart(3, '0')}
-                            </span>
-                          </div>
-                        </div>
+                {lowStockProducts.slice(0, 5).map(product => (
+                  <div
+                    key={product.id}
+                    className='flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer'
+                    onClick={() => router.push(`/modules/products/edit/${product.id}`)}
+                  >
+                    <div className='flex items-center space-x-3'>
+                      <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center overflow-hidden ${
+                        product.stock < 10 ? 'bg-red-50' : 'bg-yellow-50'
+                      }`}>
+                        <img 
+                          src={product.image} 
+                          alt={product.name}
+                          className='w-full h-full object-cover'
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+                          }}
+                        />
                       </div>
-                      <div className='text-right'>
-                        <div className='flex items-center justify-end space-x-2'>
-                          <div className='text-right'>
-                            <p className='font-bold text-red-600 text-base md:text-lg'>
-                              {product.stock} unit
-                            </p>
-                            <p className='text-gray-500 text-xs'>tersisa</p>
-                          </div>
-                          <div
-                            className={`p-1.5 md:p-2 rounded-lg ${
-                              product.stock < 10 ? 'bg-red-50' : 'bg-yellow-50'
-                            }`}
-                          >
-                            {product.stock < 10 ? (
-                              <AlertCircle className='w-4 h-4 md:w-5 md:h-5 text-red-500' />
-                            ) : (
-                              <AlertCircle className='w-4 h-4 md:w-5 md:h-5 text-yellow-500' />
-                            )}
-                          </div>
+                      <div className='space-y-1'>
+                        <p className='font-medium text-gray-800 text-sm md:text-base'>
+                          {product.name}
+                        </p>
+                        <div className='flex items-center space-x-2'>
+                          <span className='text-gray-500 text-xs md:text-sm'>
+                            {product.category_name}
+                          </span>
+                          <span className='text-gray-300'>•</span>
+                          <span className='text-gray-500 text-xs md:text-sm'>
+                            ID: PROD{product.id.toString().padStart(3, '0')}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    <div className='text-right'>
+                      <div className='flex items-center justify-end space-x-2'>
+                        <div className='text-right'>
+                          <p className={`font-bold text-base md:text-lg ${
+                            product.stock < 10 ? 'text-red-600' : 'text-yellow-600'
+                          }`}>
+                            {product.stock} unit
+                          </p>
+                          <p className='text-gray-500 text-xs'>tersisa</p>
+                        </div>
+                        <div
+                          className={`p-1.5 md:p-2 rounded-lg ${
+                            product.stock < 10 ? 'bg-red-50' : 'bg-yellow-50'
+                          }`}
+                        >
+                          <AlertCircle className={`w-4 h-4 md:w-5 md:h-5 ${
+                            product.stock < 10 ? 'text-red-500' : 'text-yellow-500'
+                          }`} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {lowStockProducts.length === 0 && !isLoadingData && (
+                  <div className='text-center py-6 text-gray-500'>
+                    Semua stok produk aman
+                  </div>
+                )}
               </div>
             </div>
           </div>

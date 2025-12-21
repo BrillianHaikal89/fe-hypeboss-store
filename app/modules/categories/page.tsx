@@ -424,14 +424,14 @@ export default function CategoriesPage() {
             </button>
             <button
               onClick={() => setFilterType('inactive')}
-              className={`px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center ${filterType === 'inactive' ? 'bg-yellow-600 text-white' : 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50'}`}
+              className={`px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center ${filterType === 'inactive' ? 'bg-green-600 text-white' : 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50'}`}
             >
               <EyeOff className="w-4 h-4 mr-1.5" />
               Nonaktif
             </button>
             <button
               onClick={() => setFilterType('all')}
-              className={`px-4 py-2.5 rounded-lg font-medium ${filterType === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50'}`}
+              className={`px-4 py-2.5 rounded-lg font-medium ${filterType === 'all' ? 'bg-green-600 text-white' : 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50'}`}
             >
               Semua
             </button>
