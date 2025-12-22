@@ -15,12 +15,12 @@ import {
   Tag,
   Truck,
   Shield,
-  Sparkles,
   CheckCircle,
   Store,
   TrendingUp,
   Users,
-  CreditCard
+  CreditCard,
+  ArrowLeft
 } from "lucide-react";
 import { useAuthStore } from "../store/auth-store";
 
@@ -44,22 +44,22 @@ export default function LoginPage() {
   // Slides untuk showcase produk
   const slides = [
     {
-      icon: <Shirt className="w-12 h-12" />,
+      icon: <Shirt className="w-10 h-10 sm:w-12 sm:h-12" />,
       title: "Koleksi Fashion Terbaru",
       description: "Temukan tren pakaian terkini untuk gaya Anda"
     },
     {
-      icon: <ShoppingBag className="w-12 h-12" />,
+      icon: <ShoppingBag className="w-10 h-10 sm:w-12 sm:h-12" />,
       title: "Belanja Praktis",
       description: "Pengalaman belanja online yang mudah dan aman"
     },
     {
-      icon: <Truck className="w-12 h-12" />,
+      icon: <Truck className="w-10 h-10 sm:w-12 sm:h-12" />,
       title: "Pengiriman Cepat",
       description: "Gratis ongkir untuk pembelian di atas Rp 500.000"
     },
     {
-      icon: <Tag className="w-12 h-12" />,
+      icon: <Tag className="w-10 h-10 sm:w-12 sm:h-12" />,
       title: "Harga Terjangkau",
       description: "Kualitas premium dengan harga bersahabat"
     }
@@ -214,16 +214,16 @@ export default function LoginPage() {
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-emerald-50 to-white">
-      <div className="h-full flex flex-col lg:flex-row">
+      <div className="flex flex-col lg:flex-row h-full">
         {/* Left Side - Brand & Features (Hidden on mobile) */}
         <div className="hidden lg:flex lg:w-1/2 flex-col p-8 lg:p-12">
           {/* Logo & Brand */}
           <div className="flex items-center gap-4 mb-12">
-            <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <Store className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <Store className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
                 Bosshype Store
               </h1>
               <p className="text-emerald-600 font-medium">Fashion Digital Terdepan</p>
@@ -231,11 +231,11 @@ export default function LoginPage() {
           </div>
 
           {/* Welcome Message */}
-          <div className="mb-10">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Selamat Datang Kembali
             </h2>
-            <p className="text-gray-600 text-lg leading-relaxed">
+            <p className="text-gray-600 leading-relaxed">
               Masuk ke akun Anda dan jelajahi koleksi fashion terbaru kami. 
               Bosshype Store menghadirkan pengalaman belanja pakaian digital yang 
               modern, aman, dan terpercaya.
@@ -243,7 +243,7 @@ export default function LoginPage() {
           </div>
 
           {/* Product Showcase Slider */}
-          <div className="relative h-64 bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-100 shadow-sm p-6 mb-8 overflow-hidden">
+          <div className="relative h-56 bg-white/80 backdrop-blur-sm rounded-2xl border border-emerald-100 shadow-sm p-6 mb-6 overflow-hidden">
             {slides.map((slide, index) => (
               <div
                 key={index}
@@ -257,10 +257,10 @@ export default function LoginPage() {
                   <div className="text-emerald-500 mb-4">
                     {slide.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
                     {slide.title}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 text-sm">
                     {slide.description}
                   </p>
                 </div>
@@ -275,7 +275,7 @@ export default function LoginPage() {
                   onClick={() => setActiveSlide(index)}
                   className={`w-2 h-2 rounded-full transition-all ${
                     index === activeSlide
-                      ? "bg-emerald-500 w-8"
+                      ? "bg-emerald-500 w-6"
                       : "bg-emerald-200"
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
@@ -285,83 +285,83 @@ export default function LoginPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-emerald-100 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-emerald-100 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
                 <Users className="w-4 h-4 text-emerald-500" />
-                <span className="text-2xl font-bold text-emerald-700">10K+</span>
+                <span className="text-xl font-bold text-emerald-700">10K+</span>
               </div>
               <p className="text-xs text-gray-600">Pelanggan Aktif</p>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-emerald-100 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-emerald-100 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
                 <ShoppingBag className="w-4 h-4 text-emerald-500" />
-                <span className="text-2xl font-bold text-emerald-700">5K+</span>
+                <span className="text-xl font-bold text-emerald-700">5K+</span>
               </div>
               <p className="text-xs text-gray-600">Produk Fashion</p>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-emerald-100 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-emerald-100 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
-                <span className="text-2xl font-bold text-emerald-700">99%</span>
+                <span className="text-xl font-bold text-emerald-700">99%</span>
               </div>
               <p className="text-xs text-gray-600">Kepuasan</p>
             </div>
           </div>
 
           {/* Bottom Text */}
-          <div className="mt-auto pt-8">
+          <div className="mt-auto pt-6">
             <p className="text-sm text-gray-500">
-              Bergabung dengan ribuan pelanggan yang telah mempercayai 
-              <span className="font-semibold text-emerald-600"> Bosshype Store</span> 
-              {" "}untuk kebutuhan fashion mereka.
+              Bergabung dengan ribuan pelanggan yang telah mempercayai{" "}
+              <span className="font-semibold text-emerald-600">Bosshype Store</span>{" "}
+              untuk kebutuhan fashion mereka.
             </p>
           </div>
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12">
-          <div className="max-w-md w-full">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-auto">
+          <div className="w-full max-w-md my-auto">
             {/* Mobile Header */}
-            <div className="lg:hidden mb-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                  <Store className="w-6 h-6 text-white" />
+            <div className="lg:hidden mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                  <Store className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
                     Bosshype Store
                   </h1>
-                  <p className="text-emerald-600 text-sm">Fashion Digital</p>
+                  <p className="text-emerald-600 text-xs">Fashion Digital</p>
                 </div>
               </div>
               
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Masuk ke Akun
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm">
                 Akses dashboard dan kelola akun Anda
               </p>
             </div>
 
             {/* Login Card */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               {/* Login Method Selection */}
-              <div className="flex gap-2 mb-8 p-1 bg-gradient-to-r from-emerald-50 to-white rounded-xl border border-emerald-100">
+              <div className="flex gap-1 mb-6 p-1 bg-gradient-to-r from-emerald-50 to-white rounded-lg border border-emerald-100">
                 <button
                   type="button"
                   onClick={() => {
                     setLoginMethod("username");
                     clearForm();
                   }}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  className={`flex-1 py-2.5 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                     loginMethod === "username"
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md"
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow"
                       : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                   }`}
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    <User className="w-4 h-4" />
+                  <div className="flex items-center justify-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
                     Username
                   </div>
                 </button>
@@ -371,14 +371,14 @@ export default function LoginPage() {
                     setLoginMethod("phone");
                     clearForm();
                   }}
-                  className={`flex-1 py-3 px-4 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  className={`flex-1 py-2.5 px-3 rounded-md text-sm font-medium transition-all duration-300 ${
                     loginMethod === "phone"
-                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md"
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow"
                       : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                   }`}
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    <Phone className="w-4 h-4" />
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5" />
                     Telepon
                   </div>
                 </button>
@@ -386,36 +386,36 @@ export default function LoginPage() {
 
               {/* Success Message */}
               {successMessage && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl animate-fade-in">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    <p className="text-emerald-700 text-sm font-medium">{successMessage}</p>
+                <div className="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    <p className="text-emerald-700 text-xs font-medium">{successMessage}</p>
                   </div>
                 </div>
               )}
 
               {/* Error Message */}
               {error && (
-                <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl animate-shake">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <p className="text-red-600 text-sm font-medium">{error}</p>
+                <div className="mb-4 p-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <p className="text-red-600 text-xs font-medium">{error}</p>
                   </div>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Identifier Input */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                     {loginMethod === "phone" ? "Nomor Telepon" : "Username"}
                   </label>
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                       {loginMethod === "phone" ? (
-                        <Phone className="w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 transition-colors duration-200" />
+                        <Phone className="w-4 h-4 text-gray-400 group-focus-within:text-emerald-600 transition-colors duration-200" />
                       ) : (
-                        <User className="w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 transition-colors duration-200" />
+                        <User className="w-4 h-4 text-gray-400 group-focus-within:text-emerald-600 transition-colors duration-200" />
                       )}
                     </div>
                     <input
@@ -429,7 +429,7 @@ export default function LoginPage() {
                           setIdentifier(e.target.value);
                         }
                       }}
-                      className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all duration-300 group-hover:border-emerald-300"
+                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 group-hover:border-emerald-400"
                       placeholder={
                         loginMethod === "phone"
                           ? "082126510230"
@@ -442,37 +442,37 @@ export default function LoginPage() {
 
                 {/* Password Input */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-semibold text-gray-700">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">
                       Kata Sandi
                     </label>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
-                      <Shield className="w-3 h-3" />
+                      <Shield className="w-2.5 h-2.5" />
                       Aman
                     </span>
                   </div>
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                      <Lock className="w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 transition-colors duration-200" />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <Lock className="w-4 h-4 text-gray-400 group-focus-within:text-emerald-600 transition-colors duration-200" />
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-12 py-3.5 border-2 border-gray-200 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all duration-300 group-hover:border-emerald-300"
+                      className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all duration-200 group-hover:border-emerald-400"
                       placeholder="Masukkan kata sandi"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors duration-200 p-1"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-colors duration-200"
                       aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
+                        <EyeOff className="w-4 h-4" />
                       ) : (
-                        <Eye className="w-5 h-5" />
+                        <Eye className="w-4 h-4" />
                       )}
                     </button>
                   </div>
@@ -489,14 +489,14 @@ export default function LoginPage() {
                         onChange={(e) => setRememberMe(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 border-2 rounded-md flex items-center justify-center transition-all duration-200 ${
+                      <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all duration-200 ${
                         rememberMe
-                          ? "bg-gradient-to-r from-emerald-500 to-emerald-600 border-transparent shadow-sm"
+                          ? "bg-gradient-to-r from-emerald-500 to-emerald-600 border-transparent"
                           : "border-gray-300 group-hover:border-emerald-500"
                       }`}
                       >
                         {rememberMe && (
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         )}
@@ -504,16 +504,16 @@ export default function LoginPage() {
                     </div>
                     <label
                       htmlFor="remember"
-                      className="ml-3 text-sm text-gray-600 group-hover:text-gray-900 transition-colors cursor-pointer"
+                      className="ml-2 text-xs text-gray-600 group-hover:text-gray-900 transition-colors cursor-pointer"
                     >
                       Ingat saya
                     </label>
                   </div>
                   <Link
-                    href="/forgot-password"
-                    className="text-sm font-medium bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 flex items-center gap-1"
+                    href="/modules/resetPassword"
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors duration-200 flex items-center gap-1"
                   >
-                    <Shield className="w-3 h-3" />
+                    <Shield className="w-2.5 h-2.5" />
                     Lupa kata sandi?
                   </Link>
                 </div>
@@ -522,18 +522,18 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
+                  className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   {isLoading ? (
                     <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                       Memproses...
                     </div>
                   ) : (
-                    <span className="relative flex items-center justify-center gap-2">
+                    <span className="relative flex items-center justify-center gap-1.5 text-sm">
                       Masuk ke Dashboard
-                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </span>
@@ -542,15 +542,15 @@ export default function LoginPage() {
               </form>
 
               {/* Register Link */}
-              <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                <p className="text-gray-600">
+              <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+                <p className="text-xs text-gray-600">
                   Belum punya akun?{" "}
                   <Link
                     href="/modules/register"
-                    className="font-semibold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 inline-flex items-center gap-1"
+                    className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors duration-200 inline-flex items-center gap-1"
                   >
                     Daftar Sekarang
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </Link>
@@ -558,13 +558,13 @@ export default function LoginPage() {
               </div>
 
               {/* Security Info */}
-              <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-white rounded-xl border border-emerald-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg">
-                    <CreditCard className="w-4 h-4 text-white" />
+              <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-white rounded-lg border border-emerald-100">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-md">
+                    <CreditCard className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700">
                       Belanja Aman & Nyaman
                     </p>
                     <p className="text-xs text-gray-500">
@@ -576,8 +576,8 @@ export default function LoginPage() {
             </div>
 
             {/* Mobile Footer */}
-            <div className="mt-8 text-center lg:hidden">
-              <p className="text-sm text-gray-500">
+            <div className="mt-6 text-center lg:hidden">
+              <p className="text-xs text-gray-500">
                 © 2025 Bosshype Store • Fashion Digital Terpercaya
               </p>
             </div>
@@ -586,31 +586,12 @@ export default function LoginPage() {
       </div>
 
       {/* Desktop Footer */}
-      <div className="hidden lg:flex absolute bottom-4 left-0 right-0 justify-center">
-        <p className="text-sm text-gray-500">
+      <div className="hidden lg:flex py-4 px-8 justify-center border-t border-gray-100 bg-white/50">
+        <p className="text-xs text-gray-500">
           © 2025 Bosshype Store • Menjual berbagai produk pakaian berkualitas • 
           <span className="text-emerald-600 font-medium"> Baju • Celana • Topi • Sepatu</span>
         </p>
       </div>
-
-      {/* Add custom animations */}
-      <style jsx global>{`
-        @keyframes shake {
-          0%, 100% {transform: translateX(0);}
-          10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
-          20%, 40%, 60%, 80% {transform: translateX(5px);}
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

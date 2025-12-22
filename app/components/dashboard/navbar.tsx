@@ -165,11 +165,6 @@ export default function DashboardNavbar() {
         icon: <BarChart3 className='w-5 h-5' />,
         label: 'Analitik',
         path: '/modules/analytics'
-      },
-      {
-        icon: <Users className='w-5 h-5' />,
-        label: 'Pelanggan',
-        path: '/modules/customers'
       }
     ]
 
@@ -187,12 +182,7 @@ export default function DashboardNavbar() {
       {
         icon: <Package className='w-5 h-5' />,
         label: 'Pesanan Saya',
-        path: '/modules/orders'
-      },
-      {
-        icon: <User className='w-5 h-5' />,
-        label: 'Profil',
-        path: '/modules/profile'
+        path: '/modules/pesananSaya'
       }
     ]
 
@@ -294,17 +284,6 @@ export default function DashboardNavbar() {
 
             {/* Right Section */}
             <div className='flex items-center space-x-3'>
-              {/* Notifications */}
-              <div className='relative'>
-                <button 
-                  aria-label='Notifikasi'
-                  className='p-2 hover:bg-gray-100 rounded-lg relative text-gray-900'
-                >
-                  <Bell className='w-5 h-5' />
-                  <span className='absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full'></span>
-                </button>
-              </div>
-
               {/* User Profile */}
               <div className='relative'>
                 <button
@@ -412,7 +391,7 @@ export default function DashboardNavbar() {
                           <>
                             <button
                               onClick={() => {
-                                router.push('/modules/orders')
+                                router.push('/modules/pesananSaya')
                                 closeProfileMenu()
                               }}
                               className='w-full flex items-center space-x-2 px-3 py-2.5 text-sm hover:bg-gray-100 rounded-lg text-gray-900 relative'
@@ -437,17 +416,6 @@ export default function DashboardNavbar() {
                             </button>
                           </>
                         )}
-                        
-                        <button
-                          onClick={() => {
-                            router.push(user?.role === 'admin' ? '/modules/settings' : '/modules/profile')
-                            closeProfileMenu()
-                          }}
-                          className='w-full flex items-center space-x-2 px-3 py-2.5 text-sm hover:bg-gray-100 rounded-lg text-gray-900'
-                        >
-                          <Settings className='w-4 h-4' />
-                          <span>Pengaturan</span>
-                        </button>
                         
                         <button
                           onClick={() => {

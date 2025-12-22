@@ -2,7 +2,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   Package,
   ShoppingCart,
@@ -18,14 +18,13 @@ import {
 import { useAuthStore } from '../../../store/auth-store'
 import { toast } from 'react-hot-toast'
 
-// Types untuk produk dan kategori
 interface Product {
   id: number
   name: string
   description: string
   category_id: number
-  price: string // harga asli
-  discount_price: string | null // jumlah diskon (misalnya 5000), bukan harga setelah diskon
+  price: string
+  discount_price: string | null
   stock: number
   image: string
   is_featured: boolean
@@ -61,13 +60,12 @@ export default function DashboardCustomer ({
   const [searchQuery, setSearchQuery] = useState('')
   const [cartCount, setCartCount] = useState(0)
   
-  // State untuk popup
   const [showAddToCartModal, setShowAddToCartModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
-  // Filter produk berdasarkan kategori dan pencarian
+  // Filter products
   useMemo(() => {
     let filtered = products
 
@@ -93,14 +91,13 @@ export default function DashboardCustomer ({
     setFilteredProducts(filtered)
   }, [products, selectedCategory, searchQuery])
 
-  // Fetch cart count saat component mount
+  // Fetch cart count
   useEffect(() => {
     if (user && token) {
       fetchCartCount()
     }
   }, [user, token])
 
-  // Fungsi untuk mendapatkan jumlah item di keranjang
   const fetchCartCount = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/carts/summary', {
@@ -119,11 +116,10 @@ export default function DashboardCustomer ({
     }
   }
 
-  // Fungsi untuk membuka popup tambah ke keranjang
   const openAddToCartModal = (product: Product) => {
     if (!user || user.role !== 'customer') {
       toast.error('Silakan login sebagai customer terlebih dahulu')
-      router.push('/login')
+      router.replace('/login')
       return
     }
 
@@ -133,11 +129,10 @@ export default function DashboardCustomer ({
     }
 
     setSelectedProduct(product)
-    setQuantity(1) // Reset quantity ke 1 setiap kali modal dibuka
+    setQuantity(1)
     setShowAddToCartModal(true)
   }
 
-  // Fungsi untuk menutup popup
   const closeAddToCartModal = () => {
     setShowAddToCartModal(false)
     setSelectedProduct(null)
@@ -145,7 +140,6 @@ export default function DashboardCustomer ({
     setIsAddingToCart(false)
   }
 
-  // Fungsi untuk mengubah quantity
   const handleQuantityChange = (action: 'increase' | 'decrease' | 'set', value?: number) => {
     if (!selectedProduct) return
 
@@ -169,7 +163,6 @@ export default function DashboardCustomer ({
     }
   }
 
-  // Fungsi untuk menambahkan ke keranjang
   const addToCart = async () => {
     if (!selectedProduct || !token || isAddingToCart) return
 
@@ -195,10 +188,8 @@ export default function DashboardCustomer ({
       if (data.success) {
         toast.success(`${selectedProduct.name} berhasil ditambahkan ke keranjang!`)
         
-        // Update cart count
         setCartCount(prev => prev + quantity)
         
-        // Tutup modal setelah sukses
         setTimeout(() => {
           closeAddToCartModal()
         }, 1500)
@@ -222,17 +213,12 @@ export default function DashboardCustomer ({
     }).format(amount)
   }
 
-  // PERBAIKAN: Fungsi untuk mendapatkan harga akhir yang benar
-  // discount_price adalah JUMLAH DISKON (bukan harga setelah diskon)
   const getFinalPrice = (product: Product): number => {
     const basePrice = parseFloat(product.price)
     
-    // PERBAIKAN: discount_price adalah jumlah diskon, jadi kurangkan dari harga asli
     if (product.discount_price !== null && product.discount_price !== undefined) {
       const discountAmount = parseFloat(product.discount_price)
       
-      // Jika discount_price > 0, kurangkan dari basePrice
-      // Pastikan harga tidak negatif
       if (discountAmount > 0) {
         const finalPrice = basePrice - discountAmount
         return finalPrice > 0 ? finalPrice : 0
@@ -242,19 +228,15 @@ export default function DashboardCustomer ({
     return basePrice
   }
 
-  // PERBAIKAN: Fungsi untuk cek apakah produk punya diskon
   const hasDiscount = (product: Product): boolean => {
     if (product.discount_price !== null && product.discount_price !== undefined) {
       const discountAmount = parseFloat(product.discount_price)
-      
-      // Diskon jika discount_price > 0 (ada jumlah diskon)
       return discountAmount > 0
     }
     
     return false
   }
 
-  // PERBAIKAN: Hitung persentase diskon
   const calculateDiscountPercentage = (product: Product): number => {
     if (!hasDiscount(product)) return 0
     
@@ -266,7 +248,6 @@ export default function DashboardCustomer ({
     return Math.round(discountPercentage)
   }
 
-  // PERBAIKAN: Hitung jumlah yang dihemat
   const calculateSavings = (product: Product, quantity: number = 1): number => {
     if (!hasDiscount(product)) return 0
     
@@ -274,22 +255,37 @@ export default function DashboardCustomer ({
     return discountAmount * quantity
   }
 
-  // PERBAIKAN: Dapatkan harga asli
   const getOriginalPrice = (product: Product): number => {
     return parseFloat(product.price)
   }
+
+  // Fallback image component
+  const ProductImage = ({ src, alt, className }: { src: string, alt: string, className: string }) => (
+    <div className={`${className} bg-gray-100 overflow-hidden`}>
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          const target = e.target as HTMLImageElement
+          target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'
+          target.className = 'w-full h-full object-contain p-4'
+        }}
+      />
+    </div>
+  )
 
   return (
     <div className='min-h-screen bg-gray-50'>
       <main className='pt-16 md:pt-20'>
         <div className='px-4 md:px-6 lg:px-8 py-4 md:py-6'>
-          {/* Welcome Banner untuk Customer */}
+          {/* Welcome Banner */}
           <div className='mb-6 md:mb-8'>
             <div className='bg-gradient-to-r from-green-500 to-indigo-600 rounded-xl lg:rounded-2xl p-5 md:p-6 lg:p-8 text-white'>
               <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 md:gap-6'>
                 <div className='flex-1'>
                   <h1 className='text-xl md:text-2xl lg:text-3xl font-bold mb-2 md:mb-3'>
-                    Selamat datang, {user?.full_name}! 🛍️
+                    Selamat datang, {user?.full_name || 'Pelanggan'}! 🛍️
                   </h1>
                   <p className='text-green-100 text-sm md:text-base'>
                     Temukan produk terbaik dengan harga spesial untuk Anda
@@ -297,14 +293,14 @@ export default function DashboardCustomer ({
                 </div>
                 <div className='flex items-center space-x-3'>
                   <button
-                    onClick={() => router.push('/modules/carts')}
+                    onClick={() => router.replace('/modules/carts')}
                     className='relative flex items-center justify-center space-x-2 px-4 md:px-6 py-2.5 md:py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-md'
                   >
                     <ShoppingBag className='w-4 h-4 md:w-5 md:h-5' />
                     <span className='text-sm md:text-base'>Keranjang</span>
                     {cartCount > 0 && (
                       <span className='absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center'>
-                        {cartCount}
+                        {cartCount > 99 ? '99+' : cartCount}
                       </span>
                     )}
                   </button>
@@ -324,6 +320,14 @@ export default function DashboardCustomer ({
                 onChange={e => setSearchQuery(e.target.value)}
                 className='w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder:text-gray-500'
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className='absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              )}
               <button className='absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500'>
                 <Filter className='w-5 h-5' />
               </button>
@@ -363,16 +367,11 @@ export default function DashboardCustomer ({
                       : 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-sm'
                   }`}
                 >
-                  <div className='w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3'>
-                    <img
-                      src={category.image}
+                  <div className='w-12 h-12 md:w-16 md:h-16 rounded-lg overflow-hidden mb-3'>
+                    <ProductImage 
+                      src={category.image} 
                       alt={category.name}
-                      className='w-full h-full object-cover'
-                      onError={e => {
-                        const target = e.target as HTMLImageElement
-                        target.src =
-                          'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
-                      }}
+                      className="w-full h-full"
                     />
                   </div>
                   <span className='font-medium text-gray-800 text-sm text-center'>
@@ -392,10 +391,7 @@ export default function DashboardCustomer ({
             <div className='flex items-center justify-between mb-4'>
               <h2 className='text-lg md:text-xl lg:text-2xl font-bold text-gray-800'>
                 {selectedCategory
-                  ? `${
-                      categories.find(c => c.id === selectedCategory)?.name ||
-                      'Kategori'
-                    } (${filteredProducts.length} produk)`
+                  ? `${categories.find(c => c.id === selectedCategory)?.name || 'Kategori'} (${filteredProducts.length} produk)`
                   : 'Semua Produk'}
               </h2>
               <div className='flex items-center space-x-2 text-sm text-gray-500'>
@@ -437,23 +433,17 @@ export default function DashboardCustomer ({
                       className='bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group'
                     >
                       {/* Product Image */}
-                      <div className='relative h-48 md:h-56 bg-gray-100 overflow-hidden'>
-                        <img
-                          src={product.image}
+                      <div className='relative h-48 md:h-56 overflow-hidden'>
+                        <ProductImage 
+                          src={product.image} 
                           alt={product.name}
-                          className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
-                          onError={e => {
-                            const target = e.target as HTMLImageElement
-                            target.src =
-                              'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'
-                          }}
+                          className="w-full h-full"
                         />
                         {product.is_featured && (
                           <div className='absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full'>
                             Featured
                           </div>
                         )}
-                        {/* PERBAIKAN: Tampilkan persen diskon hanya jika ada diskon */}
                         {hasProductDiscount && (
                           <div className='absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full'>
                             {discountPercentage}% OFF
@@ -462,9 +452,14 @@ export default function DashboardCustomer ({
                         <button className='absolute top-10 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors'>
                           <Heart className='w-4 h-4 text-gray-600' />
                         </button>
-                        {product.stock < 10 && (
+                        {product.stock < 10 && product.stock > 0 && (
                           <div className='absolute bottom-3 left-3 bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full'>
                             Stok terbatas
+                          </div>
+                        )}
+                        {product.stock === 0 && (
+                          <div className='absolute bottom-3 left-3 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full'>
+                            Stok habis
                           </div>
                         )}
                       </div>
@@ -483,7 +478,7 @@ export default function DashboardCustomer ({
                           </p>
                         </div>
 
-                        {/* PERBAIKAN: Price Display dengan benar */}
+                        {/* Price Display - DIUBAH: Menghapus info stok dan rating */}
                         <div className='mb-4'>
                           <div className='flex items-baseline gap-2'>
                             <span className='text-lg font-bold text-gray-900'>
@@ -494,23 +489,13 @@ export default function DashboardCustomer ({
                                 <span className='text-sm text-gray-500 line-through'>
                                   {formatRupiah(originalPrice)}
                                 </span>
-                                {/* PERBAIKAN: Tampilkan hemat berapa */}
                                 <span className='text-xs bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium'>
                                   Hemat {formatRupiah(savingsPerItem)}
                                 </span>
                               </>
                             )}
                           </div>
-                          <div className='flex items-center justify-between mt-1'>
-                            <div className='flex items-center text-sm text-gray-500'>
-                              <Package className='w-3 h-3 mr-1' />
-                              {product.stock} unit tersedia
-                            </div>
-                            <div className='flex items-center text-sm text-yellow-500'>
-                              <Star className='w-3 h-3 fill-current' />
-                              <span className='ml-1'>5.0</span>
-                            </div>
-                          </div>
+                          {/* DIHAPUS: Bagian yang menampilkan unit tersedia dan rating */}
                         </div>
 
                         {/* Add to Cart Button */}
@@ -547,14 +532,14 @@ export default function DashboardCustomer ({
                     {cartCount} item di keranjang
                   </p>
                   <button 
-                    onClick={() => router.push('/modules/carts')}
+                    onClick={() => router.replace('/modules/carts')}
                     className='text-sm text-emerald-600 hover:text-emerald-700 font-medium'
                   >
                     Lihat detail
                   </button>
                 </div>
                 <button
-                  onClick={() => router.push('/modules/carts')}
+                  onClick={() => router.replace('/modules/carts')}
                   className='px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-semibold hover:from-emerald-600 hover:to-emerald-700 transition-colors'
                 >
                   Lihat Keranjang
@@ -571,19 +556,16 @@ export default function DashboardCustomer ({
       {/* Add to Cart Modal */}
       {showAddToCartModal && selectedProduct && (
         <>
-          {/* Backdrop */}
           <div 
             className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity'
             onClick={closeAddToCartModal}
           />
           
-          {/* Modal */}
-          <div className='fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-appear'>
+          <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
             <div 
-              className='bg-white rounded-2xl w-full max-w-md mx-auto overflow-hidden shadow-2xl'
+              className='bg-white rounded-2xl w-full max-w-md mx-auto overflow-hidden shadow-2xl animate-modal-appear'
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header */}
               <div className='relative p-6 border-b border-gray-200'>
                 <div className='flex items-center justify-between mb-4'>
                   <h2 className='text-xl font-bold text-gray-900'>
@@ -592,22 +574,18 @@ export default function DashboardCustomer ({
                   <button
                     onClick={closeAddToCartModal}
                     className='p-2 hover:bg-gray-100 rounded-full transition-colors'
+                    disabled={isAddingToCart}
                   >
                     <X className='w-5 h-5 text-gray-500' />
                   </button>
                 </div>
                 
-                {/* Product Info */}
                 <div className='flex gap-4'>
-                  <div className='w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
-                    <img
-                      src={selectedProduct.image}
+                  <div className='w-20 h-20 rounded-lg overflow-hidden flex-shrink-0'>
+                    <ProductImage 
+                      src={selectedProduct.image} 
                       alt={selectedProduct.name}
-                      className='w-full h-full object-cover'
-                      onError={e => {
-                        const target = e.target as HTMLImageElement
-                        target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>'
-                      }}
+                      className="w-full h-full"
                     />
                   </div>
                   <div className='flex-1'>
@@ -618,7 +596,6 @@ export default function DashboardCustomer ({
                       {selectedProduct.category_name}
                     </p>
                     
-                    {/* PERBAIKAN: Price display di modal dengan benar */}
                     <div className='space-y-1'>
                       <div className='flex items-baseline gap-2'>
                         <span className='text-lg font-bold text-gray-900'>
@@ -631,7 +608,6 @@ export default function DashboardCustomer ({
                         )}
                       </div>
                       
-                      {/* PERBAIKAN: Tampilkan informasi diskon hanya jika ada */}
                       {hasDiscount(selectedProduct) && (
                         <div className='flex items-center gap-2'>
                           <span className='text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium'>
@@ -651,9 +627,7 @@ export default function DashboardCustomer ({
                 </div>
               </div>
 
-              {/* Modal Body */}
               <div className='p-6'>
-                {/* Quantity Selector */}
                 <div className='mb-6'>
                   <label className='block text-sm font-medium text-gray-700 mb-3'>
                     Jumlah yang ingin dibeli
@@ -662,7 +636,7 @@ export default function DashboardCustomer ({
                     <div className='flex items-center border border-gray-300 rounded-lg'>
                       <button
                         onClick={() => handleQuantityChange('decrease')}
-                        disabled={quantity <= 1}
+                        disabled={quantity <= 1 || isAddingToCart}
                         className={`px-4 py-3 ${quantity <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-50'}`}
                       >
                         <Minus className='w-4 h-4' />
@@ -675,26 +649,25 @@ export default function DashboardCustomer ({
                           max={selectedProduct.stock}
                           value={quantity}
                           onChange={(e) => handleQuantityChange('set', parseInt(e.target.value) || 1)}
-                          className='w-20 px-4 py-3 text-center text-lg font-semibold border-0 focus:ring-0 focus:outline-none text-gray-900'
+                          disabled={isAddingToCart}
+                          className='w-20 px-4 py-3 text-center text-lg font-semibold border-0 focus:ring-0 focus:outline-none text-gray-900 bg-transparent'
                         />
                       </div>
                       
                       <button
                         onClick={() => handleQuantityChange('increase')}
-                        disabled={quantity >= selectedProduct.stock}
+                        disabled={quantity >= selectedProduct.stock || isAddingToCart}
                         className={`px-4 py-3 ${quantity >= selectedProduct.stock ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-50'}`}
                       >
                         <Plus className='w-4 h-4' />
                       </button>
                     </div>
                     
-                    {/* PERBAIKAN: Perhitungan subtotal yang benar */}
                     <div className='text-right'>
                       <p className='text-sm text-gray-600'>Subtotal</p>
                       <p className='text-xl font-bold text-gray-900'>
                         {formatRupiah(getFinalPrice(selectedProduct) * quantity)}
                       </p>
-                      {/* PERBAIKAN: Tampilkan total hemat jika ada diskon */}
                       {hasDiscount(selectedProduct) && (
                         <p className='text-xs text-emerald-600 mt-1'>
                           Total hemat: {formatRupiah(calculateSavings(selectedProduct, quantity))}
@@ -713,7 +686,6 @@ export default function DashboardCustomer ({
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className='flex gap-3'>
                   <button
                     onClick={closeAddToCartModal}
@@ -742,12 +714,12 @@ export default function DashboardCustomer ({
                   </button>
                 </div>
                 
-                {/* Quick Actions */}
                 <div className='mt-4 flex justify-center gap-4'>
                   <button
                     onClick={() => {
                       handleQuantityChange('set', Math.min(selectedProduct.stock, 5))
                     }}
+                    disabled={isAddingToCart}
                     className='text-xs px-3 py-1.5 border border-emerald-200 text-emerald-600 rounded-full hover:bg-emerald-50 transition-colors'
                   >
                     Tambah 5
@@ -756,6 +728,7 @@ export default function DashboardCustomer ({
                     onClick={() => {
                       handleQuantityChange('set', Math.min(selectedProduct.stock, 10))
                     }}
+                    disabled={isAddingToCart}
                     className='text-xs px-3 py-1.5 border border-emerald-200 text-emerald-600 rounded-full hover:bg-emerald-50 transition-colors'
                   >
                     Tambah 10
@@ -765,6 +738,7 @@ export default function DashboardCustomer ({
                       onClick={() => {
                         handleQuantityChange('set', selectedProduct.stock)
                       }}
+                      disabled={isAddingToCart}
                       className='text-xs px-3 py-1.5 border border-red-200 text-red-600 rounded-full hover:bg-red-50 transition-colors'
                     >
                       Beli Semua ({selectedProduct.stock})
@@ -777,9 +751,7 @@ export default function DashboardCustomer ({
         </>
       )}
 
-      {/* Custom Styles */}
       <style jsx global>{`
-        /* Hide number input spinner */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
           -webkit-appearance: none;
@@ -803,6 +775,20 @@ export default function DashboardCustomer ({
         
         .animate-modal-appear {
           animation: modal-appear 0.3s ease-out;
+        }
+        
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </div>

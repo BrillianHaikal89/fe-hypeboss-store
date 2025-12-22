@@ -40,6 +40,19 @@ export default function PaymentStatus({ orderStatus, paymentStatus }: PaymentSta
     }
   };
 
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-800';
+      case 'processing': return 'text-blue-800';
+      case 'shipped': return 'text-purple-800';
+      case 'delivered': return 'text-green-800';
+      case 'paid': return 'text-green-800';
+      case 'failed': return 'text-red-800';
+      case 'expired': return 'text-gray-800';
+      default: return 'text-gray-800';
+    }
+  };
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -55,7 +68,7 @@ export default function PaymentStatus({ orderStatus, paymentStatus }: PaymentSta
       </div>
       <div className="text-right">
         <p className="font-semibold text-gray-900">Status Pembayaran</p>
-        <p className={`text-sm font-medium capitalize ${getStatusColor(paymentStatus).split(' ')[0]}`}>
+        <p className={`text-sm font-medium capitalize ${getStatusColorClass(paymentStatus)}`}>
           {paymentStatus}
         </p>
       </div>

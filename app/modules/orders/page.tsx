@@ -5,12 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from 'next/dynamic';
-
-const PaymentStatus = dynamic(() => import('./components/PaymentStatus'), {
-  loading: () => <div className="animate-pulse h-6 bg-gray-200 rounded w-24"></div>,
-  ssr: false
-});
-
+import PaymentStatus from './components/PaymentStatus';
 import {
   Package,
   Truck,
@@ -18,7 +13,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Home,
   ArrowLeft,
   ShoppingBag,
   AlertCircle,
@@ -26,24 +20,22 @@ import {
   MapPin,
   Phone,
   FileText,
-  Wallet,
   Shield,
   ExternalLink,
   ShoppingCart,
   MessageSquare,
   Calendar,
   CreditCard as CardIcon,
-  BanknoteIcon,
+  Banknote,
   QrCode,
   Smartphone,
-  Store
+  Store,
+  X
 } from "lucide-react";
 import { useAuthStore } from "../../store/auth-store";
 
-// Interfaces berdasarkan response backend
 interface OrderItem {
   id: number;
-  order_id: number;
   product_id: number;
   product_name: string;
   product_price: number;
@@ -52,17 +44,15 @@ interface OrderItem {
   quantity: number;
   subtotal: number;
   product_image: string;
-  created_at: string;
-  updated_at: string;
 }
 
 interface OrderData {
   id: number;
   order_code: string;
   user_id: number;
-  total_amount: string;
-  shipping_cost: string;
-  final_amount: string;
+  total_amount: number;
+  shipping_cost: number;
+  final_amount: number;
   shipping_address: string;
   shipping_phone: string;
   notes: string;
@@ -77,13 +67,6 @@ interface OrderData {
   user_name: string;
   user_phone: string;
   items: OrderItem[];
-  summary?: {
-    total_original_price: number;
-    total_discount: number;
-    total_after_discount: number;
-    shipping_cost: number;
-    final_amount: number;
-  };
 }
 
 interface PaymentData {
@@ -92,23 +75,25 @@ interface PaymentData {
   transaction_id?: string;
 }
 
+interface OrderSummary {
+  total_original_price: number;
+  total_discount: number;
+  total_after_discount: number;
+  shipping_cost: number;
+  final_amount: number;
+}
+
 interface OrderResponse {
   success: boolean;
   message: string;
   data: {
     order: OrderData;
     payment: PaymentData;
-    summary?: {
-      total_original_price: number;
-      total_discount: number;
-      total_after_discount: number;
-      shipping_cost: number;
-      final_amount: number;
-    };
+    summary: OrderSummary;
   };
 }
 
-interface CheckoutItem {
+interface CartItem {
   cart_id: number;
   product_id: number;
   product_name: string;
@@ -122,13 +107,12 @@ interface CheckoutItem {
 }
 
 interface CheckoutData {
-  items: CheckoutItem[];
+  items: CartItem[];
   totalAmount: number;
   totalItems: number;
   timestamp: string;
 }
 
-// Midtrans Snap types
 declare global {
   interface Window {
     snap: {
@@ -157,24 +141,21 @@ export default function OrdersPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   
-  // Form state
   const [formData, setFormData] = useState({
-    shipping_address: "",
-    shipping_phone: "",
+    shipping_address: user?.address || "",
+    shipping_phone: user?.phone || "",
     notes: "",
     shipping_cost: 10500,
     payment_method: "bank_transfer"
   });
   
-  // State untuk form validation
   const [formErrors, setFormErrors] = useState<{
     shipping_address?: string;
     shipping_phone?: string;
   }>({});
   
-  // Payment methods
   const paymentMethods = [
-    { value: "bank_transfer", label: "Transfer Bank", icon: <BanknoteIcon className="w-5 h-5" />, description: "Transfer manual ke rekening bank" },
+    { value: "bank_transfer", label: "Transfer Bank", icon: <Banknote className="w-5 h-5" />, description: "Transfer manual ke rekening bank" },
     { value: "credit_card", label: "Kartu Kredit", icon: <CardIcon className="w-5 h-5" />, description: "Visa, MasterCard, JCB" },
     { value: "gopay", label: "GoPay", icon: <Smartphone className="w-5 h-5" />, description: "Bayar dengan GoPay" },
     { value: "shopeepay", label: "ShopeePay", icon: <Smartphone className="w-5 h-5" />, description: "Bayar dengan ShopeePay" },
@@ -184,54 +165,60 @@ export default function OrdersPage() {
   const hasLoadedScript = useRef(false);
   const hasProcessedCheckout = useRef(false);
 
-  // Get status from URL (Midtrans redirect)
+  // Handle Midtrans redirect
   useEffect(() => {
     const status = searchParams.get('status');
     const order_id = searchParams.get('order_id');
     const transaction_status = searchParams.get('transaction_status');
     
-    // Handle Midtrans redirect
     if (transaction_status) {
-      if (transaction_status === 'capture' || transaction_status === 'settlement') {
+      handleMidtransResponse(transaction_status, order_id);
+    } else if (status && order_id) {
+      handleStatusResponse(status, order_id);
+    }
+  }, [searchParams]);
+
+  const handleMidtransResponse = (transaction_status: string, order_id: string | null) => {
+    switch (transaction_status) {
+      case 'capture':
+      case 'settlement':
         setPaymentStatus('success');
         setSuccessMessage("🎉 Pembayaran berhasil! Pesanan Anda sedang diproses.");
-        
         if (order_id && token) {
           fetchOrderData(order_id);
         }
-        
-        // Redirect ke halaman konfirmasi
         setTimeout(() => {
-          router.push(`/modules/orders/confirmation?order_id=${order_id}&status=success`);
+          router.replace(`/modules/orders/confirmation?order_id=${order_id}&status=success`);
         }, 3000);
-      } else if (transaction_status === 'pending') {
+        break;
+      case 'pending':
         setPaymentStatus('pending');
         setSuccessMessage("⏳ Pembayaran tertunda. Silakan selesaikan pembayaran Anda.");
-      } else if (transaction_status === 'deny' || transaction_status === 'cancel' || transaction_status === 'expire') {
+        break;
+      case 'deny':
+      case 'cancel':
+      case 'expire':
         setPaymentStatus('error');
         setError("❌ Pembayaran dibatalkan atau gagal. Silakan coba lagi.");
-      }
+        break;
     }
-    
-    // Handle status parameter manual
-    if (status) {
-      setPaymentStatus(status);
-      if (status === 'success') {
-        setSuccessMessage("🎉 Pembayaran berhasil! Pesanan Anda sedang diproses.");
-        if (order_id && token) {
-          fetchOrderData(order_id);
-        }
-      } else if (status === 'pending') {
-        setSuccessMessage("⏳ Pembayaran tertunda. Silakan selesaikan pembayaran Anda.");
-      } else if (status === 'error') {
-        setError("❌ Terjadi kesalahan saat pembayaran. Silakan coba lagi.");
-      } else if (status === 'cancel') {
-        setError("❌ Pembayaran dibatalkan. Silakan coba lagi.");
-      }
-    }
-  }, [searchParams, token, router]);
+  };
 
-  // Fetch order data
+  const handleStatusResponse = (status: string, order_id: string) => {
+    setPaymentStatus(status);
+    if (status === 'success') {
+      setSuccessMessage("🎉 Pembayaran berhasil! Pesanan Anda sedang diproses.");
+      if (order_id && token) {
+        fetchOrderData(order_id);
+      }
+    } else if (status === 'pending') {
+      setSuccessMessage("⏳ Pembayaran tertunda. Silakan selesaikan pembayaran Anda.");
+    } else if (status === 'error' || status === 'cancel') {
+      setError("❌ Terjadi kesalahan saat pembayaran. Silakan coba lagi.");
+    }
+  };
+
+  // Fetch order data - SESUAI DENGAN DOKUMENTASI
   const fetchOrderData = async (orderId: string) => {
     if (!token) return;
     
@@ -243,72 +230,78 @@ export default function OrdersPage() {
         }
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Gagal mengambil data pesanan`);
+      }
+      
       const result = await response.json();
       
       if (result.success) {
         setOrderData(result.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching order:', err);
+      setError(err.message || "Gagal mengambil data pesanan");
     }
   };
 
   // Check authentication
   useEffect(() => {
     if (typeof window !== 'undefined' && !isAuthenticated()) {
-      router.push("/login");
+      router.replace("/login");
+      return;
     }
   }, [isAuthenticated, router]);
 
-  // Fetch checkout data dari cart
+  // Fetch cart data untuk checkout
   const fetchCheckoutData = useCallback(async () => {
     if (!token || hasProcessedCheckout.current) return;
     
     try {
       setIsLoading(true);
+      setError("");
       
-      // 1. Ambil data cart dari API
-      const cartResponse = await fetch(`${API_BASE_URL}/carts`, {
+      const response = await fetch(`${API_BASE_URL}/carts`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
-      if (!cartResponse.ok) {
-        throw new Error('Gagal mengambil data keranjang');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Gagal mengambil data keranjang`);
       }
       
-      const cartData = await cartResponse.json();
+      const data = await response.json();
       
-      if (!cartData.success || cartData.data.length === 0) {
+      if (!data.success || !data.data?.items || data.data.items.length === 0) {
         setError("❌ Keranjang belanja Anda kosong");
         setTimeout(() => {
-          router.push('/modules/carts');
+          router.replace('/modules/carts');
         }, 2000);
         return;
       }
       
-      // 2. Format data untuk checkout
-      const checkoutItems: CheckoutItem[] = cartData.data.map((item: any) => {
-        const finalPrice = item.discount_price > 0 ? item.discount_price : item.price;
-        const subtotal = finalPrice * item.quantity;
+      const checkoutItems: CartItem[] = data.data.items.map((item: any) => {
+        const price = item.price || 0;
+        const discountPrice = item.discount_price || 0;
+        const finalPrice = discountPrice > 0 ? price - discountPrice : price;
+        const subtotal = finalPrice * (item.quantity || 1);
         
         return {
-          cart_id: item.id,
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_image: item.product_image,
-          price: item.price,
-          discount_price: item.discount_price || 0,
+          cart_id: item.cart_id || item.id || 0,
+          product_id: item.product_id || 0,
+          product_name: item.product_name || 'Produk',
+          product_image: item.product_image || '/placeholder-product.jpg',
+          price: price,
+          discount_price: discountPrice,
           final_price: finalPrice,
-          quantity: item.quantity,
-          stock: item.stock,
+          quantity: item.quantity || 1,
+          stock: item.stock || 0,
           subtotal: subtotal
         };
       });
       
-      // 3. Hitung total
       const totalAmount = checkoutItems.reduce((total, item) => total + item.subtotal, 0);
       const totalItems = checkoutItems.reduce((total, item) => total + item.quantity, 0);
       
@@ -320,19 +313,18 @@ export default function OrdersPage() {
       };
       
       setCheckoutData(checkoutData);
-      
-      // 4. Simpan ke sessionStorage untuk recovery
       sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
       
-      // 5. Pre-fill form dengan data user jika ada
+      // Pre-fill form dengan user data
       if (user) {
         setFormData(prev => ({
           ...prev,
-          shipping_phone: user.phone || ""
+          shipping_phone: user.phone || "",
+          shipping_address: user.address || ""
         }));
       }
       
-      // 6. Cek apakah sudah ada order yang dibuat sebelumnya
+      // Load saved order
       const savedOrder = sessionStorage.getItem('currentOrder');
       if (savedOrder) {
         try {
@@ -348,7 +340,7 @@ export default function OrdersPage() {
       console.error('Error loading checkout data:', err);
       setError(`❌ ${err.message || "Gagal memuat data checkout"}`);
       
-      // Coba load dari sessionStorage sebagai fallback
+      // Fallback to sessionStorage
       try {
         const data = sessionStorage.getItem('checkoutData');
         if (data) {
@@ -364,11 +356,10 @@ export default function OrdersPage() {
     }
   }, [token, user, router]);
 
-  // Load checkout data pada mount
+  // Load checkout data on mount
   useEffect(() => {
     if (!token) return;
     
-    // Cek dulu di sessionStorage
     try {
       const savedCheckoutData = sessionStorage.getItem('checkoutData');
       if (savedCheckoutData) {
@@ -381,7 +372,6 @@ export default function OrdersPage() {
       console.error('Error loading from sessionStorage:', e);
     }
     
-    // Jika tidak ada di sessionStorage, fetch dari API
     fetchCheckoutData();
   }, [token, fetchCheckoutData]);
 
@@ -417,14 +407,13 @@ export default function OrdersPage() {
       
       script.onerror = () => {
         console.error('Failed to load Midtrans Snap script');
-        setMidtransLoaded(true);
+        setError("❌ Gagal memuat sistem pembayaran. Silakan refresh halaman.");
       };
       
       document.head.appendChild(script);
     };
 
-    const timer = setTimeout(loadScript, 100);
-    return () => clearTimeout(timer);
+    loadScript();
   }, []);
 
   // Handle form input change
@@ -435,7 +424,6 @@ export default function OrdersPage() {
       [name]: name === 'shipping_cost' ? parseInt(value) : value
     }));
     
-    // Clear error when user starts typing
     if (formErrors[name as keyof typeof formErrors]) {
       setFormErrors(prev => ({
         ...prev,
@@ -444,22 +432,25 @@ export default function OrdersPage() {
     }
   };
 
-  // Validasi form
+  // Validate form
   const validateForm = () => {
     const errors: {
       shipping_address?: string;
       shipping_phone?: string;
     } = {};
     
-    if (!formData.shipping_address.trim()) {
+    const address = formData.shipping_address.trim();
+    const phone = formData.shipping_phone.trim();
+    
+    if (!address) {
       errors.shipping_address = "Alamat pengiriman harus diisi";
-    } else if (formData.shipping_address.trim().length < 10) {
+    } else if (address.length < 10) {
       errors.shipping_address = "Alamat terlalu pendek, minimal 10 karakter";
     }
     
-    if (!formData.shipping_phone.trim()) {
+    if (!phone) {
       errors.shipping_phone = "Nomor telepon harus diisi";
-    } else if (!/^[0-9]{10,13}$/.test(formData.shipping_phone.trim())) {
+    } else if (!/^[0-9]{10,13}$/.test(phone)) {
       errors.shipping_phone = "Nomor telepon tidak valid (10-13 digit)";
     }
     
@@ -467,14 +458,13 @@ export default function OrdersPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // Create order function
+  // Create order function - SESUAI DENGAN DOKUMENTASI
   const createOrder = useCallback(async () => {
     if (!token || !checkoutData) {
       setError("❌ Token atau data checkout tidak tersedia");
       return;
     }
 
-    // Validasi form
     if (!validateForm()) {
       setError("❌ Harap perbaiki data pengiriman Anda");
       return;
@@ -485,7 +475,6 @@ export default function OrdersPage() {
     setSuccessMessage("");
 
     try {
-      // Prepare order data sesuai dengan backend
       const orderPayload = {
         shipping_address: formData.shipping_address.trim(),
         shipping_phone: formData.shipping_phone.trim(),
@@ -494,12 +483,10 @@ export default function OrdersPage() {
         payment_method: formData.payment_method
       };
 
-      console.log('Creating order with payload:', orderPayload);
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      // API call ke http://localhost:3001/api/orders
+      // Menggunakan endpoint sesuai dokumentasi
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
@@ -523,22 +510,17 @@ export default function OrdersPage() {
         throw new Error(result.message || "Gagal membuat pesanan");
       }
       
-      console.log('Order created successfully:', result.data);
-      
-      // Set data order dan payment token
       setOrderData(result.data.order);
       setPaymentToken(result.data.payment.token);
       
-      // Simpan ke sessionStorage untuk recovery
       sessionStorage.setItem('currentOrder', JSON.stringify({
         order: result.data.order,
         paymentToken: result.data.payment.token
       }));
       
-      // Hapus checkout data dari sessionStorage
       sessionStorage.removeItem('checkoutData');
       
-      // Hapus cart items dari database setelah order berhasil dibuat
+      // Clear cart setelah order berhasil dibuat
       try {
         await fetch(`${API_BASE_URL}/carts/clear`, {
           method: 'DELETE',
@@ -549,7 +531,6 @@ export default function OrdersPage() {
         });
       } catch (cartError) {
         console.error('Error clearing cart:', cartError);
-        // Tidak perlu throw error karena order sudah berhasil dibuat
       }
       
       setSuccessMessage("🎉 Pesanan berhasil dibuat! Silakan lanjutkan pembayaran.");
@@ -567,7 +548,7 @@ export default function OrdersPage() {
     }
   }, [token, checkoutData, formData]);
 
-  // Handle payment dengan Midtrans Snap
+  // Handle payment with Midtrans Snap
   const handlePayment = useCallback(() => {
     if (!paymentToken) {
       setError("❌ Token pembayaran tidak tersedia");
@@ -576,16 +557,13 @@ export default function OrdersPage() {
 
     if (!window.snap) {
       setError("❌ Sistem pembayaran belum siap. Silakan refresh halaman.");
-      if (hasLoadedScript.current) {
-        setTimeout(() => window.location.reload(), 1000);
-      }
+      setTimeout(() => window.location.reload(), 1000);
       return;
     }
 
     setError("");
     setIsProcessingPayment(true);
 
-    // Konfigurasi Midtrans Snap
     const snapOptions = {
       onSuccess: function(result: any) {
         console.log('Payment success:', result);
@@ -601,13 +579,11 @@ export default function OrdersPage() {
           });
         }
         
-        // Hapus data dari sessionStorage
         sessionStorage.removeItem('currentOrder');
         sessionStorage.removeItem('checkoutData');
         
-        // Redirect ke halaman konfirmasi
         setTimeout(() => {
-          router.push(`/modules/orders/confirmation?order_id=${orderData?.id}&status=success`);
+          router.replace(`/modules/orders/confirmation?order_id=${orderData?.id}&status=success`);
         }, 2000);
       },
       onPending: function(result: any) {
@@ -632,25 +608,24 @@ export default function OrdersPage() {
       }
     };
 
-    // Jalankan Midtrans Snap
     window.snap.pay(paymentToken, snapOptions);
   }, [paymentToken, orderData, router]);
 
-  // Fungsi untuk menghitung harga final (price - discount_price)
-  const calculateFinalPrice = useCallback((item: CheckoutItem | OrderItem) => {
+  // Calculate final price
+  const calculateFinalPrice = useCallback((item: CartItem | OrderItem) => {
     if ('price' in item) {
-      // CheckoutItem
+      // CartItem
       const price = item.price || 0;
-      const discountPrice = (item as CheckoutItem).discount_price || 0;
-      return price - discountPrice;
+      const discountPrice = (item as CartItem).discount_price || 0;
+      return discountPrice > 0 ? price - discountPrice : price;
     } else {
-      // OrderItem - sudah dalam bentuk harga setelah diskon
+      // OrderItem
       return item.product_price;
     }
   }, []);
 
-  // Hitung subtotal per item
-  const calculateItemSubtotal = useCallback((item: CheckoutItem | OrderItem) => {
+  // Calculate item subtotal
+  const calculateItemSubtotal = useCallback((item: CartItem | OrderItem) => {
     if ('quantity' in item) {
       const finalPrice = calculateFinalPrice(item);
       return finalPrice * item.quantity;
@@ -658,21 +633,7 @@ export default function OrdersPage() {
     return 0;
   }, [calculateFinalPrice]);
 
-  // Hitung diskon per item
-  const calculateItemDiscount = useCallback((item: CheckoutItem | OrderItem) => {
-    if ('discount_price' in item && item.discount_price) {
-      return item.discount_price * item.quantity;
-    }
-    // Untuk OrderItem dari API response
-    if ('original_price' in item && item.original_price && 'product_price' in item) {
-      const originalPrice = item.original_price;
-      const finalPrice = item.product_price;
-      return (originalPrice - finalPrice) * item.quantity;
-    }
-    return 0;
-  }, []);
-
-  // Hitung TOTAL diskon untuk semua item
+  // Calculate total discount
   const calculateTotalDiscount = useCallback(() => {
     if (orderData?.items) {
       return orderData.items.reduce((total, item) => {
@@ -683,13 +644,13 @@ export default function OrdersPage() {
     }
     if (checkoutData) {
       return checkoutData.items.reduce((total, item) => {
-        return total + calculateItemDiscount(item);
+        return total + (item.discount_price * item.quantity);
       }, 0);
     }
     return 0;
-  }, [checkoutData, orderData, calculateItemDiscount]);
+  }, [checkoutData, orderData]);
 
-  // Hitung total harga asli sebelum diskon
+  // Calculate total original price
   const calculateTotalOriginalPrice = useCallback(() => {
     if (orderData?.items) {
       return orderData.items.reduce((total, item) => {
@@ -705,10 +666,10 @@ export default function OrdersPage() {
     return 0;
   }, [checkoutData, orderData]);
 
-  // Hitung total harga setelah diskon
+  // Calculate total after discount
   const getTotalAfterDiscount = useCallback(() => {
     if (orderData) {
-      return parseFloat(orderData.total_amount);
+      return orderData.total_amount;
     }
     if (checkoutData) {
       return checkoutData.items.reduce((total, item) => {
@@ -721,6 +682,7 @@ export default function OrdersPage() {
   // Format currency
   const formatCurrency = useCallback((amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return 'Rp 0';
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -730,23 +692,27 @@ export default function OrdersPage() {
 
   // Format date
   const formatDate = useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return 'Invalid date';
+    }
   }, []);
 
-  // Perhitungan persentase diskon per item
-  const discountPercentage = (item: CheckoutItem | OrderItem) => {
+  // Calculate discount percentage
+  const discountPercentage = (item: CartItem | OrderItem) => {
     let originalPrice = 0;
     let discountAmount = 0;
     
     if ('price' in item) {
-      // CheckoutItem
+      // CartItem
       originalPrice = item.price;
       discountAmount = item.discount_price || 0;
     } else {
@@ -761,7 +727,7 @@ export default function OrdersPage() {
     return 0;
   };
 
-  // Hitung total quantity
+  // Calculate total quantity
   const getTotalQuantity = useCallback(() => {
     if (orderData?.items) {
       return orderData.items.reduce((total, item) => total + item.quantity, 0);
@@ -772,66 +738,59 @@ export default function OrdersPage() {
     return 0;
   }, [orderData, checkoutData]);
 
-  // Refresh checkout data
-  const refreshCheckoutData = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      await fetchCheckoutData();
-      setSuccessMessage("✅ Data checkout berhasil diperbarui");
-    } catch (err: any) {
-      setError(`❌ ${err.message || "Gagal memperbarui data checkout"}`);
-    } finally {
-      setIsLoading(false);
+  // Calculate total amount
+  const getTotalAmount = useCallback(() => {
+    if (orderData) {
+      return orderData.final_amount;
     }
-  };
+    if (checkoutData) {
+      const subtotal = getTotalAfterDiscount();
+      const shipping = getTotalAfterDiscount() >= 500000 ? 0 : formData.shipping_cost;
+      return subtotal + shipping;
+    }
+    return 0;
+  }, [orderData, checkoutData, formData.shipping_cost, getTotalAfterDiscount]);
 
-  // Skeleton loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-        <div className="bg-white shadow-sm">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
-                <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-              <div className="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-          </div>
-        </div>
+  // Calculate subtotal
+  const getSubtotal = useCallback(() => {
+    if (orderData) {
+      return orderData.total_amount;
+    }
+    if (checkoutData) {
+      return getTotalAfterDiscount();
+    }
+    return 0;
+  }, [orderData, checkoutData, getTotalAfterDiscount]);
 
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-center mb-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mx-auto mb-4"></div>
-              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-              <div className="h-64 bg-gray-200 rounded-xl animate-pulse"></div>
-              <div className="h-48 bg-gray-200 rounded-xl animate-pulse"></div>
-            </div>
-            <div className="lg:col-span-1">
-              <div className="h-96 bg-gray-200 rounded-xl animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Get items
+  const getItems = useCallback(() => {
+    if (orderData?.items) {
+      return orderData.items;
+    }
+    if (checkoutData?.items) {
+      return checkoutData.items;
+    }
+    return [];
+  }, [orderData, checkoutData]);
 
-  // Early return jika tidak ada checkout data
-  if (!checkoutData && !orderData) {
+  // Check free shipping
+  const isFreeShipping = useCallback(() => {
+    if (orderData) {
+      return orderData.shipping_cost === 0;
+    }
+    if (checkoutData) {
+      return getTotalAfterDiscount() >= 500000;
+    }
+    return false;
+  }, [orderData, checkoutData, getTotalAfterDiscount]);
+
+  // Loading state
+  if (!isLoading && (!checkoutData && !orderData)) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
           <ShoppingCart className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-black mb-2">Keranjang Kosong</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Keranjang Kosong</h2>
           <p className="text-gray-600 mb-6">Silakan tambahkan produk ke keranjang terlebih dahulu</p>
           <Link
             href="/modules/carts"
@@ -845,55 +804,12 @@ export default function OrdersPage() {
     );
   }
 
-  // Hitung total akhir (termasuk shipping)
-  const getTotalAmount = () => {
-    if (orderData) {
-      return parseFloat(orderData.final_amount);
-    }
-    if (checkoutData) {
-      const subtotal = getTotalAfterDiscount();
-      const shipping = getTotalAfterDiscount() >= 500000 ? 0 : formData.shipping_cost;
-      return subtotal + shipping;
-    }
-    return 0;
-  };
-
-  const getSubtotal = () => {
-    if (orderData) {
-      return parseFloat(orderData.total_amount);
-    }
-    if (checkoutData) {
-      return getTotalAfterDiscount();
-    }
-    return 0;
-  };
-
-  const getItems = () => {
-    if (orderData?.items) {
-      return orderData.items;
-    }
-    if (checkoutData?.items) {
-      return checkoutData.items;
-    }
-    return [];
-  };
-
-  const isFreeShipping = () => {
-    if (orderData) {
-      return parseFloat(orderData.shipping_cost) === 0;
-    }
-    if (checkoutData) {
-      return getTotalAfterDiscount() >= 500000;
-    }
-    return false;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Loading Overlay saat membuat order */}
+      {/* Loading Overlay */}
       {isCreatingOrder && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-6">
                 <div className="w-20 h-20 border-4 border-emerald-100 rounded-full"></div>
@@ -901,7 +817,7 @@ export default function OrdersPage() {
                   <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-black mb-2">Membuat Pesanan Anda</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Membuat Pesanan Anda</h3>
               <p className="text-gray-600 mb-6">
                 Harap tunggu sebentar, pesanan Anda sedang diproses...
               </p>
@@ -916,29 +832,29 @@ export default function OrdersPage() {
 
       {/* Notification Container */}
       {(error || successMessage) && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4 animate-slide-down">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
           {error && (
-            <div className="mb-3 p-4 bg-red-50 border border-red-200 rounded-xl shadow-lg flex items-start gap-3 animate-fade-in">
+            <div className="mb-3 p-4 bg-red-50 border border-red-200 rounded-xl shadow-lg flex items-start gap-3 animate-slide-down">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-black text-sm font-medium flex-1">{error}</p>
+              <p className="text-red-700 text-sm font-medium flex-1">{error}</p>
               <button 
                 onClick={() => setError("")}
                 className="text-red-400 hover:text-red-600 transition-colors"
               >
-                <XCircle className="w-4 h-4" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
           
           {successMessage && (
-            <div className="mb-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl shadow-lg flex items-start gap-3 animate-fade-in">
+            <div className="mb-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl shadow-lg flex items-start gap-3 animate-slide-down">
               <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-black text-sm font-medium flex-1">{successMessage}</p>
+              <p className="text-emerald-700 text-sm font-medium flex-1">{successMessage}</p>
               <button 
                 onClick={() => setSuccessMessage("")}
                 className="text-emerald-400 hover:text-emerald-600 transition-colors"
               >
-                <XCircle className="w-4 h-4" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -952,38 +868,15 @@ export default function OrdersPage() {
             <div className="flex items-center gap-4">
               <Link 
                 href="/modules/carts" 
-                className="flex items-center gap-2 text-black hover:text-emerald-600 transition-colors"
-                prefetch={false}
+                className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="font-medium hidden sm:inline">Kembali ke Keranjang</span>
               </Link>
               <div className="flex items-center gap-2">
                 <CreditCard className="w-6 h-6 text-emerald-600" />
-                <span className="text-xl font-bold text-black">Checkout</span>
+                <span className="text-xl font-bold text-gray-900">Checkout</span>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              {checkoutData && !orderData && (
-                <button
-                  onClick={refreshCheckoutData}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 text-black hover:text-emerald-600 transition-colors text-sm"
-                >
-                  <Loader2 className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">Refresh Data</span>
-                </button>
-              )}
-              
-              <Link
-                href="/modules/dashboard"
-                className="flex items-center gap-2 text-black hover:text-emerald-600 transition-colors"
-                prefetch={false}
-              >
-                <Home className="w-5 h-5" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </Link>
             </div>
           </div>
         </div>
@@ -992,33 +885,16 @@ export default function OrdersPage() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Order Summary & Form */}
+          {/* Left Column */}
           <div className="lg:col-span-2">
-            {/* Form Informasi Pengiriman */}
+            {/* Shipping Information Form */}
             {!orderData && checkoutData && (
-              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-6 relative">
-                {isCreatingOrder && (
-                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl z-10 flex items-center justify-center">
-                    <div className="text-center">
-                      <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Memproses pesanan...</p>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg sm:text-xl font-bold text-black">Informasi Pengiriman</h2>
-                  {isCreatingOrder && (
-                    <div className="flex items-center gap-2 text-emerald-600">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm font-medium">Memproses...</span>
-                    </div>
-                  )}
-                </div>
+              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-6">Informasi Pengiriman</h2>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-black mb-2" htmlFor="shipping_address">
+                    <label className="block text-gray-700 mb-2" htmlFor="shipping_address">
                       <span className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
                         Alamat Pengiriman *
@@ -1031,12 +907,12 @@ export default function OrdersPage() {
                       onChange={handleInputChange}
                       required
                       rows={3}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-black placeholder:text-gray-500 transition-colors ${
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 transition-colors ${
                         formErrors.shipping_address 
                           ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
                           : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'
                       } ${isCreatingOrder ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                      placeholder="Masukkan alamat lengkap pengiriman (contoh: Jl. Sudirman No. 123, Jakarta Selatan)"
+                      placeholder="Masukkan alamat lengkap pengiriman"
                       disabled={isCreatingOrder}
                     />
                     {formErrors.shipping_address && (
@@ -1048,7 +924,7 @@ export default function OrdersPage() {
                   </div>
 
                   <div>
-                    <label className="block text-black mb-2" htmlFor="shipping_phone">
+                    <label className="block text-gray-700 mb-2" htmlFor="shipping_phone">
                       <span className="flex items-center gap-2">
                         <Phone className="w-4 h-4" />
                         Nomor Telepon *
@@ -1061,7 +937,7 @@ export default function OrdersPage() {
                       value={formData.shipping_phone}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-black placeholder:text-gray-500 transition-colors ${
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 placeholder:text-gray-500 transition-colors ${
                         formErrors.shipping_phone 
                           ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
                           : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'
@@ -1078,7 +954,7 @@ export default function OrdersPage() {
                   </div>
 
                   <div>
-                    <label className="block text-black mb-2" htmlFor="notes">
+                    <label className="block text-gray-700 mb-2" htmlFor="notes">
                       <span className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4" />
                         Pesan untuk Penjual (Opsional)
@@ -1090,19 +966,16 @@ export default function OrdersPage() {
                       value={formData.notes}
                       onChange={handleInputChange}
                       rows={3}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-black placeholder:text-gray-500 ${
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder:text-gray-500 ${
                         isCreatingOrder ? 'bg-gray-50 cursor-not-allowed' : ''
                       }`}
-                      placeholder="Contoh: Tolong dibungkus rapi, warna merah, kirim sebelum jam 3 sore"
+                      placeholder="Contoh: Tolong dibungkus rapi"
                       disabled={isCreatingOrder}
                     />
-                    <p className="text-sm text-gray-500 mt-1">
-                      Pesan Anda akan dilihat oleh penjual sebelum memproses pesanan
-                    </p>
                   </div>
 
                   <div>
-                    <label className="block text-black mb-2" htmlFor="shipping_cost">
+                    <label className="block text-gray-700 mb-2" htmlFor="shipping_cost">
                       <span className="flex items-center gap-2">
                         <Truck className="w-4 h-4" />
                         Pilihan Pengiriman
@@ -1113,7 +986,7 @@ export default function OrdersPage() {
                       name="shipping_cost"
                       value={formData.shipping_cost}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-black ${
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 ${
                         isCreatingOrder ? 'bg-gray-50 cursor-not-allowed' : ''
                       }`}
                       disabled={isCreatingOrder || getTotalAfterDiscount() >= 500000}
@@ -1125,13 +998,13 @@ export default function OrdersPage() {
                     </select>
                     {getTotalAfterDiscount() >= 500000 && (
                       <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
-                        🎉 Anda mendapatkan gratis ongkir untuk pembelian di atas Rp 500.000!
+                        🎉 Anda mendapatkan gratis ongkir!
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-black mb-2" htmlFor="payment_method">
+                    <label className="block text-gray-700 mb-2">
                       <span className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4" />
                         Metode Pembayaran
@@ -1158,7 +1031,7 @@ export default function OrdersPage() {
                                 {method.icon}
                               </div>
                               <div>
-                                <p className="font-medium text-black">{method.label}</p>
+                                <p className="font-medium text-gray-900">{method.label}</p>
                                 <p className="text-sm text-gray-500">{method.description}</p>
                               </div>
                             </div>
@@ -1177,7 +1050,7 @@ export default function OrdersPage() {
             {/* Order Items */}
             <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg sm:text-xl font-bold text-black">Item Pesanan</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Item Pesanan</h2>
                 {orderData?.order_code && (
                   <div className="text-right">
                     <p className="text-sm text-gray-600">Kode Pesanan</p>
@@ -1198,15 +1071,15 @@ export default function OrdersPage() {
                 </div>
               )}
 
-              {/* Shipping Info jika sudah ada order */}
+              {/* Shipping Info if order exists */}
               {orderData && (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className="w-5 h-5 text-gray-600" />
-                    <h3 className="font-semibold text-black">Alamat Pengiriman</h3>
+                    <h3 className="font-semibold text-gray-900">Alamat Pengiriman</h3>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="font-medium text-black">{orderData.shipping_address}</p>
+                    <p className="font-medium text-gray-900">{orderData.shipping_address}</p>
                     <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                       <span className="flex items-center gap-1">
                         <Phone className="w-4 h-4" />
@@ -1226,16 +1099,16 @@ export default function OrdersPage() {
               {/* Items List */}
               <div className="space-y-4">
                 {getItems().map((item: any, index: number) => {
-                  const isCheckoutItem = 'discount_price' in item;
-                  const originalPrice = isCheckoutItem 
+                  const isCartItem = 'discount_price' in item;
+                  const originalPrice = isCartItem 
                     ? item.price 
                     : item.original_price || item.product_price || 0;
-                  const discountPrice = isCheckoutItem 
+                  const discountPrice = isCartItem 
                     ? item.discount_price 
                     : item.original_price - item.product_price;
                   const finalPrice = calculateFinalPrice(item);
                   const subtotal = calculateItemSubtotal(item);
-                  const itemDiscountTotal = calculateItemDiscount(item);
+                  const itemDiscountTotal = discountPrice * item.quantity;
                   const discountPercent = discountPercentage(item);
                   
                   return (
@@ -1252,26 +1125,25 @@ export default function OrdersPage() {
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-black text-base sm:text-lg mb-2">
+                        <h4 className="font-medium text-gray-900 text-base sm:text-lg mb-2">
                           {item.product_name}
                         </h4>
                         
-                        {/* Price display */}
                         <div className="flex flex-wrap items-center gap-2 mb-3">
                           {discountPrice > 0 ? (
                             <>
-                              <span className="text-lg font-bold text-black">
+                              <span className="text-lg font-bold text-gray-900">
                                 {formatCurrency(finalPrice)}
                               </span>
                               <span className="text-sm text-gray-500 line-through">
                                 {formatCurrency(originalPrice)}
                               </span>
                               <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded font-medium">
-                                Diskon {discountPercent}% (-{formatCurrency(discountPrice)})
+                                Diskon {discountPercent}%
                               </span>
                             </>
                           ) : (
-                            <span className="text-lg font-bold text-black">
+                            <span className="text-lg font-bold text-gray-900">
                               {formatCurrency(finalPrice)}
                             </span>
                           )}
@@ -1280,7 +1152,7 @@ export default function OrdersPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div>
                             <p className="text-sm text-gray-600">
-                              Jumlah: <span className="text-black font-medium">{item.quantity}</span>
+                              Jumlah: <span className="text-gray-900 font-medium">{item.quantity}</span>
                             </p>
                             {discountPrice > 0 && (
                               <p className="text-xs text-gray-500 mt-1">
@@ -1310,20 +1182,17 @@ export default function OrdersPage() {
           {/* Right Column - Payment Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
-              {/* Payment Summary Card */}
               <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-200 mb-6">
-                <h3 className="font-bold text-black text-lg mb-6">Ringkasan Pembayaran</h3>
+                <h3 className="font-bold text-gray-900 text-lg mb-6">Ringkasan Pembayaran</h3>
                 
                 <div className="space-y-3 mb-6">
-                  {/* Total Harga Asli */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Total Harga Asli ({getTotalQuantity()} barang)</span>
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-gray-900">
                       {formatCurrency(calculateTotalOriginalPrice())}
                     </span>
                   </div>
                   
-                  {/* Total Diskon */}
                   {calculateTotalDiscount() > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Diskon</span>
@@ -1333,23 +1202,20 @@ export default function OrdersPage() {
                     </div>
                   )}
                   
-                  {/* Subtotal setelah diskon */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium text-black">
+                    <span className="font-medium text-gray-900">
                       {formatCurrency(getSubtotal())}
                     </span>
                   </div>
                   
-                  {/* Biaya Pengiriman */}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Biaya Pengiriman</span>
-                    <span className={`font-medium ${isFreeShipping() ? 'text-emerald-600' : 'text-black'}`}>
+                    <span className={`font-medium ${isFreeShipping() ? 'text-emerald-600' : 'text-gray-900'}`}>
                       {isFreeShipping() ? 'GRATIS' : formatCurrency(formData.shipping_cost)}
                     </span>
                   </div>
                   
-                  {/* Info Gratis Ongkir */}
                   {isFreeShipping() && checkoutData && (
                     <div className="p-3 bg-gradient-to-r from-emerald-50 to-white border border-emerald-100 rounded-lg">
                       <p className="text-sm font-medium text-emerald-700 flex items-center gap-2">
@@ -1359,10 +1225,9 @@ export default function OrdersPage() {
                     </div>
                   )}
                   
-                  {/* Total Pembayaran */}
                   <div className="border-t border-gray-200 pt-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-black">Total Pembayaran</span>
+                      <span className="text-lg font-bold text-gray-900">Total Pembayaran</span>
                       <div className="text-right">
                         <span className="text-xl sm:text-2xl font-bold text-emerald-600">
                           {formatCurrency(getTotalAmount())}
@@ -1383,39 +1248,26 @@ export default function OrdersPage() {
                     <button
                       onClick={createOrder}
                       disabled={isCreatingOrder || !formData.shipping_address.trim() || !formData.shipping_phone.trim() || Object.keys(formErrors).length > 0}
-                      className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-emerald-500/30 relative"
+                      className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-emerald-500/30"
                     >
                       {isCreatingOrder ? (
                         <>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Loader2 className="w-6 h-6 animate-spin text-white" />
-                          </div>
-                          <span className="invisible">Membuat Pesanan...</span>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Memproses...</span>
                         </>
                       ) : (
                         <>
-                          <ShoppingBag className="w-5 h-5 text-white" />
-                          <span className="text-sm sm:text-base text-white">Buat Pesanan</span>
+                          <ShoppingBag className="w-5 h-5" />
+                          <span>Buat Pesanan</span>
                         </>
                       )}
                     </button>
                     
-                    {/* Info jika form belum lengkap */}
                     {(!formData.shipping_address.trim() || !formData.shipping_phone.trim()) && (
                       <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                         <p className="text-sm text-amber-700 flex items-center gap-2">
                           <AlertCircle className="w-4 h-4" />
                           Lengkapi data pengiriman untuk melanjutkan
-                        </p>
-                      </div>
-                    )}
-                    
-                    {/* Info jika ada error validasi */}
-                    {Object.keys(formErrors).length > 0 && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-600 flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4" />
-                          Perbaiki data yang ditandai merah di atas
                         </p>
                       </div>
                     )}
@@ -1430,23 +1282,23 @@ export default function OrdersPage() {
                       >
                         {isProcessingPayment ? (
                           <>
-                            <Loader2 className="w-5 h-5 animate-spin text-white" />
-                            <span className="text-sm sm:text-base text-white">Menyiapkan...</span>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Menyiapkan...</span>
                           </>
                         ) : paymentStatus === 'pending' ? (
                           <>
-                            <Clock className="w-5 h-5 text-white" />
-                            <span className="text-sm sm:text-base text-white">Lanjutkan Pembayaran</span>
+                            <Clock className="w-5 h-5" />
+                            <span>Lanjutkan Pembayaran</span>
                           </>
                         ) : paymentStatus === 'success' ? (
                           <>
-                            <CheckCircle className="w-5 h-5 text-white" />
-                            <span className="text-sm sm:text-base text-white">Pembayaran Berhasil</span>
+                            <CheckCircle className="w-5 h-5" />
+                            <span>Pembayaran Berhasil</span>
                           </>
                         ) : (
                           <>
-                            <CreditCard className="w-5 h-5 text-white" />
-                            <span className="text-sm sm:text-base text-white">Bayar Sekarang</span>
+                            <CreditCard className="w-5 h-5" />
+                            <span>Bayar Sekarang</span>
                           </>
                         )}
                       </button>
@@ -1454,7 +1306,7 @@ export default function OrdersPage() {
                     
                     {orderData.payment_status === 'pending' && (
                       <button
-                        onClick={() => router.push(`/modules/dashboard?tab=orders&order_id=${orderData.id}`)}
+                        onClick={() => router.replace(`/modules/dashboard?tab=orders&order_id=${orderData.id}`)}
                         className="w-full py-3 border border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
                       >
                         <Calendar className="w-4 h-4" />
@@ -1477,7 +1329,7 @@ export default function OrdersPage() {
                       <Shield className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-black">
+                      <p className="text-sm font-bold text-gray-700">
                         Belanja 100% Aman
                       </p>
                       <p className="text-xs text-gray-500">
@@ -1487,15 +1339,15 @@ export default function OrdersPage() {
                   </div>
                   
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-black">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
                       <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       <span>Garansi uang kembali 30 hari</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-black">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
                       <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       <span>Bebas biaya transaksi</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-black">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
                       <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       <span>Dukungan pelanggan 24/7</span>
                     </div>
@@ -1503,28 +1355,28 @@ export default function OrdersPage() {
                 </div>
               )}
 
-              {/* Order Info jika sudah ada order */}
+              {/* Order Info */}
               {orderData && (
                 <div className="bg-gradient-to-r from-emerald-50 to-white rounded-xl p-5 border border-emerald-100">
-                  <h4 className="font-bold text-black mb-3">Informasi Pesanan</h4>
+                  <h4 className="font-bold text-gray-900 mb-3">Informasi Pesanan</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tanggal Pesanan</span>
-                      <span className="font-medium text-black">{formatDate(orderData.created_at)}</span>
+                      <span className="font-medium text-gray-900">{formatDate(orderData.created_at)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Metode Pembayaran</span>
-                      <span className="font-medium text-black capitalize">
+                      <span className="font-medium text-gray-900 capitalize">
                         {orderData.payment_method?.replace('_', ' ') || 'Bank Transfer'}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Nama Pemesan</span>
-                      <span className="font-medium text-black">{orderData.user_name}</span>
+                      <span className="font-medium text-gray-900">{orderData.user_name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Nomor Telepon</span>
-                      <span className="font-medium text-black">{orderData.user_phone}</span>
+                      <span className="font-medium text-gray-900">{orderData.user_phone}</span>
                     </div>
                   </div>
                 </div>
@@ -1537,22 +1389,19 @@ export default function OrdersPage() {
       {/* Payment Modal */}
       {showPaymentModal && (
         <>
-          {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity"
             onClick={() => !isProcessingPayment && setShowPaymentModal(false)}
           />
           
-          {/* Modal */}
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div 
-              className="bg-white rounded-2xl w-full max-w-md mx-auto overflow-hidden shadow-2xl animate-slide-up"
+              className="bg-white rounded-2xl w-full max-w-md mx-auto overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header */}
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-black">
+                  <h2 className="text-xl font-bold text-gray-900">
                     Pembayaran Pesanan
                   </h2>
                   <button
@@ -1560,11 +1409,10 @@ export default function OrdersPage() {
                     disabled={isProcessingPayment}
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
                   >
-                    <XCircle className="w-5 h-5 text-gray-500" />
+                    <X className="w-5 h-5 text-gray-500" />
                   </button>
                 </div>
                 
-                {/* Order Info */}
                 {orderData && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
@@ -1573,19 +1421,18 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Total Pembayaran:</span>
-                      <span className="text-lg font-bold text-black">{formatCurrency(orderData.final_amount)}</span>
+                      <span className="text-lg font-bold text-gray-900">{formatCurrency(orderData.final_amount)}</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Modal Content */}
               <div className="p-6">
                 <div className="text-center mb-6">
                   <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CreditCard className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-black mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
                     Selesaikan Pembayaran Anda
                   </h3>
                   <p className="text-gray-600">
@@ -1593,9 +1440,8 @@ export default function OrdersPage() {
                   </p>
                 </div>
 
-                {/* Payment Instructions */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <h4 className="font-medium text-black mb-2">Instruksi Pembayaran:</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">Instruksi Pembayaran:</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Pilih metode pembayaran yang tersedia</li>
                     <li>• Ikuti instruksi pada halaman pembayaran</li>
@@ -1604,21 +1450,19 @@ export default function OrdersPage() {
                   </ul>
                 </div>
 
-                {/* Payment Methods Preview */}
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 mb-3">Metode Pembayaran Tersedia:</p>
                   <div className="flex flex-wrap gap-2">
                     {paymentMethods.map((method) => (
                       <div key={method.value} className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                         <span className="text-emerald-600">{method.icon}</span>
-                        <span className="text-sm text-black">{method.label}</span>
+                        <span className="text-sm text-gray-900">{method.label}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Modal Actions */}
               <div className="p-6 border-t border-gray-200 bg-gray-50">
                 <div className="flex flex-col gap-3">
                   <button
@@ -1662,11 +1506,11 @@ export default function OrdersPage() {
         </>
       )}
 
-      {/* Bottom Navigation - Mobile */}
+      {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-black">Total ({getTotalQuantity()} barang)</p>
+            <p className="text-sm text-gray-600">Total ({getTotalQuantity()} barang)</p>
             <p className="text-xl font-bold text-emerald-600">
               {formatCurrency(getTotalAmount())}
             </p>
@@ -1684,11 +1528,13 @@ export default function OrdersPage() {
               className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-lg shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isCreatingOrder ? (
-                <Loader2 className="w-5 h-5 animate-spin text-white" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <ShoppingBag className="w-5 h-5 text-white" />
+                <ShoppingBag className="w-5 h-5" />
               )}
-              <span className="text-white">{isCreatingOrder ? 'Memproses...' : 'Buat Pesanan'}</span>
+              <span>
+                {isCreatingOrder ? 'Memproses...' : 'Buat Pesanan'}
+              </span>
             </button>
           ) : orderData.payment_status !== 'paid' ? (
             <button
@@ -1696,14 +1542,13 @@ export default function OrdersPage() {
               disabled={isProcessingPayment}
               className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-lg shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <CreditCard className="w-5 h-5 text-white" />
-              <span className="text-white">Bayar Sekarang</span>
+              <CreditCard className="w-5 h-5" />
+              <span>Bayar Sekarang</span>
             </button>
           ) : null}
         </div>
       </div>
 
-      {/* Custom Styles */}
       <style jsx global>{`
         @keyframes slide-down {
           from { 
@@ -1716,35 +1561,10 @@ export default function OrdersPage() {
           }
         }
         
-        @keyframes slide-up {
-          from { 
-            opacity: 0; 
-            transform: translateY(20px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
         .animate-slide-down {
           animation: slide-down 0.3s ease-out;
         }
         
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-        
-        /* Padding bottom untuk mobile nav */
         @media (max-width: 1024px) {
           body {
             padding-bottom: 88px;

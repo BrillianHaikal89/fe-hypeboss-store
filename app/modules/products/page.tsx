@@ -212,7 +212,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
     
@@ -659,7 +659,7 @@ export default function ProductsPage() {
                               )}
                               
                               <button
-                                onClick={() => router.push(`/modules/products/${product.id}`)}
+                                onClick={() => router.replace(`/modules/products/${product.id}`)}
                                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-900"
                                 title="Lihat Detail"
                               >
