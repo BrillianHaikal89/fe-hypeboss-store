@@ -20,7 +20,7 @@ import {
   CheckCircle,
   XCircle,
   Info,
-  ArrowLeft // <-- Tambahkan ini
+  ArrowLeft
 } from "lucide-react";
 import { useAuthStore } from "../../store/auth-store";
 import ProductModal from "./components/productModal";

@@ -12,6 +12,8 @@ interface DeleteConfirmationModalProps {
   showImageOption?: boolean;
   deleteWithImage?: boolean;
   onImageOptionChange?: (value: boolean) => void;
+  isTestingStock?: boolean;
+  onTestStockReduction?: () => void;
 }
 
 export default function DeleteConfirmationModal({
@@ -23,6 +25,8 @@ export default function DeleteConfirmationModal({
   showImageOption = true,
   deleteWithImage = false,
   onImageOptionChange,
+  isTestingStock = false,
+  onTestStockReduction,
 }: DeleteConfirmationModalProps) {
   const [localDeleteImage, setLocalDeleteImage] = useState(deleteWithImage);
 
@@ -90,6 +94,27 @@ export default function DeleteConfirmationModal({
                     Jika dicentang, gambar akan dihapus permanen dari penyimpanan.
                     Jika tidak dicentang, hanya data produk yang dihapus (gambar tetap ada di server).
                   </p>
+                </div>
+              )}
+
+              {/* Tombol Testing Stock Reduction */}
+              {isTestingStock && onTestStockReduction && (
+                <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-medium text-gray-900 mb-2">
+                    🧪 Testing Pengurangan Stok
+                  </p>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Test pengurangan stok otomatis setelah pembayaran berhasil
+                  </p>
+                  <button
+                    onClick={onTestStockReduction}
+                    className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Test Stock Reduction
+                  </button>
                 </div>
               )}
               

@@ -143,7 +143,7 @@ export default function DashboardPage() {
   // Redirect jika tidak login
   useEffect(() => {
     if (!isLoading && !user) {
-      router.replace('/login')
+      router.push('/login')
     }
   }, [user, isLoading, router])
 
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => router.replace('/modules/categories')}
+                  onClick={() => router.push('/modules/categories')}
                   className='flex items-center justify-center space-x-2 px-4 md:px-6 py-2.5 md:py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-md w-full lg:w-auto min-w-[180px]'
                 >
                   <Plus className='w-4 h-4 md:w-5 md:h-5' />
@@ -208,12 +208,13 @@ export default function DashboardPage() {
                   </span>
                 </button>
                 <button
-                  onClick={() => router.replace('/modules/products')}
+                  onClick={() => router.push('/modules/products')}
                   className='flex items-center justify-center space-x-2 px-4 md:px-6 py-2.5 md:py-3 bg-white text-green-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-md w-full lg:w-auto min-w-[180px]'
                 >
                   <Plus className='w-4 h-4 md:w-5 md:h-5' />
                   <span className='text-sm md:text-base'>Kelola Produk</span>
                 </button>
+                
               </div>
             </div>
           </div>
@@ -276,7 +277,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <button 
-                  onClick={() => router.replace('/modules/products')}
+                  onClick={() => router.push('/modules/products')}
                   className='flex items-center space-x-2 text-green-600 hover:text-green-700 font-medium text-sm md:text-base transition-colors'
                 >
                   <span>Lihat Semua</span>
@@ -376,7 +377,7 @@ export default function DashboardPage() {
                       </td>
                       <td className='p-3 md:p-4'>
                         <button 
-                          onClick={() => router.replace(`/modules/products/edit/${product.id}`)}
+                          onClick={() => router.push(`/modules/products/edit/${product.id}`)}
                           className='p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors'
                         >
                           <Eye className='w-4 h-4 md:w-5 md:h-5 text-gray-500' />
@@ -420,7 +421,7 @@ export default function DashboardPage() {
                   <div
                     key={category.id}
                     className='flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer'
-                    onClick={() => router.replace(`/modules/categories/edit/${category.id}`)}
+                    onClick={() => router.push(`/modules/categories/edit/${category.id}`)}
                   >
                     <div className='flex items-center space-x-3'>
                       <div className='w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden'>
@@ -489,7 +490,7 @@ export default function DashboardPage() {
                   <div
                     key={product.id}
                     className='flex items-center justify-between p-3 md:p-4 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer'
-                    onClick={() => router.replace(`/modules/products/edit/${product.id}`)}
+                    onClick={() => router.push(`/modules/products/edit/${product.id}`)}
                   >
                     <div className='flex items-center space-x-3'>
                       <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center overflow-hidden ${

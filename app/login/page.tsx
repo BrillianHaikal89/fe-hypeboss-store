@@ -86,7 +86,7 @@ export default function LoginPage() {
   // Handle redirect jika sudah login
   useEffect(() => {
     if (isClient && isAuthenticated()) {
-      router.push("/modules/dashboard");
+      router.replace("/modules/dashboard");
     }
   }, [isClient, isAuthenticated, router]);
 
@@ -159,7 +159,7 @@ export default function LoginPage() {
         
         // Redirect ke dashboard setelah 1 detik
         setTimeout(() => {
-          router.push("/modules/dashboard");
+          router.replace("/modules/dashboard");
         }, 1000);
       } else {
         setError(data.message || "Login gagal. Periksa kredensial Anda.");
