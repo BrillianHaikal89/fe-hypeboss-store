@@ -374,26 +374,7 @@ export default function ConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white print:bg-white">
-      {/* Header */}
-      <div className="bg-white shadow-sm print:hidden">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link 
-                href="/modules/dashboard?tab=orders" 
-                className="flex items-center gap-2 text-gray-600 hover:text-emerald-600 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium hidden sm:inline">Kembali ke Dashboard</span>
-              </Link>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
-                <span className="text-xl font-bold text-gray-900">Konfirmasi Pesanan</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Notification Container */}
       <div className="container mx-auto px-4 py-4 print:hidden">
@@ -519,26 +500,7 @@ export default function ConfirmationPage() {
             </div>
           )}
 
-          {!orderData && !error && paymentStatus === null && (
-            <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-2xl p-6 sm:p-8 text-center">
-              <div className="flex flex-col items-center">
-                <ShoppingBag className="w-16 h-16 text-gray-400 mb-4" />
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                  Tidak Ada Data Pesanan
-                </h1>
-                <p className="text-gray-600 mb-6 max-w-md">
-                  Tidak dapat menemukan data pesanan. Pastikan Anda telah menyelesaikan proses checkout.
-                </p>
-                <Link
-                  href="/modules/dashboard?tab=orders"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Lihat Pesanan Saya
-                </Link>
-              </div>
-            </div>
-          )}
+          
         </div>
 
         {/* Main Content */}
@@ -991,33 +953,6 @@ export default function ConfirmationPage() {
                 <p>www.bosstore.com | 0812-3456-7890</p>
                 <p className="mt-2">Struk ini sah sebagai bukti pembayaran</p>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!orderData && !error && paymentStatus === null && !isLoading && (
-          <div className="max-w-md mx-auto text-center py-12">
-            <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Pesanan Tidak Ditemukan</h2>
-            <p className="text-gray-600 mb-6">
-              Tidak ada data pesanan yang dapat ditampilkan. Pastikan Anda telah menyelesaikan proses checkout.
-            </p>
-            <div className="space-y-3">
-              <Link
-                href="/modules/dashboard?tab=orders"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Lihat Pesanan Saya
-              </Link>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <Home className="w-4 h-4" />
-                Kembali Berbelanja
-              </Link>
             </div>
           </div>
         )}

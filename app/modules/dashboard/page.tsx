@@ -6,13 +6,9 @@ import { useEffect, useState, useMemo } from 'react'
 import {
   Package,
   ShoppingCart,
-  DollarSign,
-  ClipboardList,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Plus,
+  AlertCircle,
   Eye,
-  AlertCircle
+  Plus
 } from 'lucide-react'
 import { useAuthStore } from '../../store/auth-store'
 import DashboardCustomer from './components/dashboardCustomer'
@@ -42,7 +38,7 @@ interface Category {
   created_at: string
 }
 
-// Data statistik untuk admin
+// Data statistik untuk admin - HANYA 2 ITEM
 const getInitialStats = () => [
   {
     label: 'Total Produk',
@@ -59,22 +55,6 @@ const getInitialStats = () => [
     change: '+0',
     trend: 'up' as const,
     color: 'bg-green-500'
-  },
-  {
-    label: 'Pendapatan Bulan Ini',
-    value: 'Rp 0',
-    icon: DollarSign,
-    change: '+0%',
-    trend: 'up' as const,
-    color: 'bg-purple-500'
-  },
-  {
-    label: 'Pesanan',
-    value: '0',
-    icon: ClipboardList,
-    change: '+0',
-    trend: 'up' as const,
-    color: 'bg-orange-500'
   }
 ]
 
@@ -219,8 +199,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8'>
+          {/* Stats Grid - MENJADI 2 KOLOM SAJA */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8'>
             {stats.map((stat, index) => (
               <div
                 key={index}
@@ -235,11 +215,7 @@ export default function DashboardPage() {
                       {stat.value}
                     </p>
                     <div className='flex items-center mt-1'>
-                      {stat.trend === 'up' ? (
-                        <TrendingUpIcon className='w-3 h-3 md:w-4 md:h-4 text-green-500 mr-1 md:mr-2' />
-                      ) : (
-                        <TrendingDownIcon className='w-3 h-3 md:w-4 md:h-4 text-red-500 mr-1 md:mr-2' />
-                      )}
+                      {/* MENGHAPUS TrendingUpIcon dan TrendingDownIcon */}
                       <span
                         className={`text-xs md:text-sm font-medium ${
                           stat.trend === 'up'

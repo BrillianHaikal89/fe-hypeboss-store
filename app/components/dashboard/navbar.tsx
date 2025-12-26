@@ -160,11 +160,6 @@ export default function DashboardNavbar() {
         icon: <Package className='w-5 h-5' />,
         label: 'Produk',
         path: '/modules/products'
-      },
-      {
-        icon: <BarChart3 className='w-5 h-5' />,
-        label: 'Analitik',
-        path: '/modules/analytics'
       }
     ]
 
@@ -338,54 +333,6 @@ export default function DashboardNavbar() {
                           {user?.role === 'admin' ? 'Administrator' : 'Pelanggan'}
                         </p>
                       </div>
-
-                      {/* Quick Stats in Dropdown (hanya untuk admin) */}
-                      {user?.role === 'admin' && (
-                        <div className='p-4 border-b'>
-                          <h3 className='text-sm font-medium text-gray-800 mb-3'>
-                            Ringkasan Cepat
-                          </h3>
-                          <div className='space-y-3'>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-sm text-gray-900'>
-                                Produk Aktif
-                              </span>
-                              {isLoadingStats ? (
-                                <div className='h-4 w-8 bg-gray-200 rounded animate-pulse'></div>
-                              ) : (
-                                <span className='font-bold text-green-600'>
-                                  {quickStats.activeProducts}
-                                </span>
-                              )}
-                            </div>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-sm text-gray-900'>
-                                Pesanan Hari Ini
-                              </span>
-                              {isLoadingStats ? (
-                                <div className='h-4 w-8 bg-gray-200 rounded animate-pulse'></div>
-                              ) : (
-                                <span className='font-bold text-blue-600'>
-                                  {quickStats.todayOrders}
-                                </span>
-                              )}
-                            </div>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-sm text-gray-900'>
-                                Pendapatan Bulan Ini
-                              </span>
-                              {isLoadingStats ? (
-                                <div className='h-4 w-12 bg-gray-200 rounded animate-pulse'></div>
-                              ) : (
-                                <span className='font-bold text-purple-600'>
-                                  {formatRupiah(quickStats.monthlyRevenue)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
                       <div className='p-2'>
                         {user?.role === 'customer' && (
                           <>
