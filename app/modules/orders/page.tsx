@@ -1541,155 +1541,15 @@ export default function OrdersPage () {
                       ))}
                     </div>
                   </div>
-
-                  {/* Notification Info */}
-                  <div className='bg-gradient-to-r from-blue-50 to-white border border-blue-100 rounded-lg p-4 mt-4'>
-                    <div className='flex items-start gap-3'>
-                      <Bell className='w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5' />
-                      <div>
-                        <p className='font-medium text-gray-900 mb-1'>
-                          Notifikasi WhatsApp
-                        </p>
-                        <p className='text-sm text-gray-600'>
-                          Setelah pembayaran berhasil, Anda akan menerima
-                          notifikasi WhatsApp:
-                        </p>
-                        <ul className='text-xs text-gray-600 mt-2 space-y-1'>
-                          <li>✓ Konfirmasi pembayaran ke pembeli</li>
-                          <li>✓ Notifikasi order baru ke admin</li>
-                          <li>✓ Update status pengiriman</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
 
             {/* Order Items */}
-            <div className='bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-6'>
-              <div className='flex items-center justify-between mb-4'>
-                <h2 className='text-lg sm:text-xl font-bold text-gray-900'>
-                  Item Pesanan
-                </h2>
-                {orderData?.order_code && (
-                  <div className='text-right'>
-                    <p className='text-sm text-gray-600'>Kode Pesanan</p>
-                    <p className='font-mono font-bold text-emerald-600 text-sm sm:text-base'>
-                      {orderData.order_code}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Order Status */}
-              {orderData && (
-                <div className='mb-6 p-4 bg-gradient-to-r from-emerald-50 to-white rounded-lg border border-emerald-100'>
-                  <PaymentStatus
-                    orderStatus={orderData.order_status}
-                    paymentStatus={orderData.payment_status}
-                  />
-
-                  {/* Status Update Actions */}
-                  {orderData.payment_status === 'pending' && (
-                    <div className='mt-4 space-y-3'>
-                      <div className='flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg'>
-                        <Clock className='w-4 h-4' />
-                        <span>Menunggu konfirmasi pembayaran...</span>
-                      </div>
-
-                      <div className='flex flex-wrap gap-2'>
-                        {/* Tombol Sinkronisasi */}
-                        <button
-                          onClick={() =>
-                            syncPaymentStatus(orderData.id.toString())
-                          }
-                          disabled={isSyncing || isCheckingStatus}
-                          className='px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2'
-                        >
-                          {isSyncing ? (
-                            <Loader2 className='w-3 h-3 animate-spin' />
-                          ) : (
-                            <RefreshCw className='w-3 h-3' />
-                          )}
-                          Sinkronkan Status
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            checkPaymentStatus(orderData.id.toString())
-                          }
-                          disabled={isCheckingStatus}
-                          className='px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2'
-                        >
-                          {isCheckingStatus ? (
-                            <Loader2 className='w-3 h-3 animate-spin' />
-                          ) : (
-                            <RefreshCw className='w-3 h-3' />
-                          )}
-                          Cek Status
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            manualStatusUpdate(orderData.id.toString())
-                          }
-                          disabled={isUpdatingStatus}
-                          className='px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2'
-                        >
-                          {isUpdatingStatus ? (
-                            <Loader2 className='w-3 h-3 animate-spin' />
-                          ) : (
-                            <RefreshCw className='w-3 h-3' />
-                          )}
-                          Update dari Midtrans
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* WhatsApp Notification Status */}
-                  {orderData.payment_status === 'paid' && (
-                    <div className='mt-4 p-3 bg-gradient-to-r from-green-50 to-white border border-green-100 rounded-lg'>
-                      <div className='flex items-center gap-2'>
-                        <MessageSquare className='w-4 h-4 text-green-600' />
-                        <p className='text-sm text-green-700 font-medium'>
-                          Notifikasi WhatsApp telah dikirim ke Anda dan Admin
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Shipping Info if order exists */}
-              {orderData && (
-                <div className='mb-6'>
-                  <div className='flex items-center gap-2 mb-2'>
-                    <MapPin className='w-5 h-5 text-gray-600' />
-                    <h3 className='font-semibold text-gray-900'>
-                      Alamat Pengiriman
-                    </h3>
-                  </div>
-                  <div className='bg-gray-50 rounded-lg p-4'>
-                    <p className='font-medium text-gray-900'>
-                      {orderData.shipping_address}
-                    </p>
-                    <div className='flex items-center gap-4 mt-2 text-sm text-gray-600'>
-                      <span className='flex items-center gap-1'>
-                        <Phone className='w-4 h-4' />
-                        {orderData.shipping_phone}
-                      </span>
-                      {orderData.notes && (
-                        <span className='flex items-center gap-1'>
-                          <FileText className='w-4 h-4' />
-                          {orderData.notes}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className='bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200'>
+              <h2 className='text-lg sm:text-xl font-bold text-gray-900 mb-6'>
+                Item Pesanan
+              </h2>
 
               {/* Items List */}
               <div className='space-y-4'>
@@ -1992,40 +1852,6 @@ export default function OrdersPage () {
                 </p>
               </div>
 
-              {/* Security Info */}
-              {!orderData && (
-                <div className='bg-gradient-to-r from-emerald-50 to-white rounded-xl p-5 border border-emerald-100 mb-4'>
-                  <div className='flex items-center gap-3 mb-4'>
-                    <div className='p-2 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg'>
-                      <Shield className='w-5 h-5 text-white' />
-                    </div>
-                    <div>
-                      <p className='text-sm font-bold text-gray-700'>
-                        Belanja 100% Aman
-                      </p>
-                      <p className='text-xs text-gray-500'>
-                        Transaksi dienkripsi dan terlindungi
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='space-y-3'>
-                    <div className='flex items-center gap-2 text-sm text-gray-600'>
-                      <CheckCircle className='w-4 h-4 text-emerald-500 flex-shrink-0' />
-                      <span>Garansi uang kembali 30 hari</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm text-gray-600'>
-                      <CheckCircle className='w-4 h-4 text-emerald-500 flex-shrink-0' />
-                      <span>Bebas biaya transaksi</span>
-                    </div>
-                    <div className='flex items-center gap-2 text-sm text-gray-600'>
-                      <CheckCircle className='w-4 h-4 text-emerald-500 flex-shrink-0' />
-                      <span>Dukungan pelanggan 24/7</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Order Info */}
               {orderData && (
                 <div className='bg-gradient-to-r from-emerald-50 to-white rounded-xl p-5 border border-emerald-100'>
@@ -2110,19 +1936,6 @@ export default function OrdersPage () {
                   <p className='text-gray-600 text-sm mb-3'>
                     Anda akan dialihkan ke halaman pembayaran Midtrans yang aman
                   </p>
-
-                  <div className='grid grid-cols-2 gap-2 mb-4'>
-                    {['Credit Card', 'Bank Transfer', 'GoPay', 'ShopeePay'].map(
-                      method => (
-                        <div
-                          key={method}
-                          className='p-3 bg-gray-100 rounded-lg text-center'
-                        >
-                          <p className='text-sm font-medium'>{method}</p>
-                        </div>
-                      )
-                    )}
-                  </div>
                 </div>
 
                 {/* Action Buttons */}

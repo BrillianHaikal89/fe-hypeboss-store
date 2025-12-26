@@ -445,6 +445,16 @@ export default function ProductsPage() {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 
+                {/* Tombol Kembali untuk Desktop */}
+                <button
+                  onClick={() => router.back()}
+                  className="hidden md:flex items-center justify-center mr-4 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700"
+                  title="Kembali ke halaman sebelumnya"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="ml-2 text-sm font-semibold">Kembali</span>
+                </button>
+                
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Manajemen Produk</h1>
                   <p className="text-gray-700 mt-1 font-medium">Kelola produk Anda di sini</p>

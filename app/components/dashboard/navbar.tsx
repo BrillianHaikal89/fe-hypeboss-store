@@ -353,13 +353,13 @@ export default function DashboardNavbar() {
                             </button>
                             <button
                               onClick={() => {
-                                router.push('/modules/wishlist')
+                                router.push('/modules/carts')
                                 closeProfileMenu()
                               }}
                               className='w-full flex items-center space-x-2 px-3 py-2.5 text-sm hover:bg-gray-100 rounded-lg text-gray-900'
                             >
-                              <Heart className='w-4 h-4' />
-                              <span>Wishlist</span>
+                              <ShoppingBag className='w-4 h-4' />
+                              <span>Keranjang Saya</span>
                             </button>
                           </>
                         )}
