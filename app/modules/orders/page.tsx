@@ -426,16 +426,16 @@ export default function OrdersPage () {
     }
   }
 
-  // Fungsi untuk check payment status dari API payment
+  // Fungsi untuk check payment status dari API
   const checkPaymentStatus = async (orderId: string) => {
     try {
       setIsCheckingStatus(true)
       setError('')
       setSuccessMessage('🔄 Memeriksa status pembayaran...')
 
-      // Gunakan endpoint baru yang sudah ada
+      // Gunakan endpoint yang benar (dalam module orders)
       const response = await fetch(
-        `${API_BASE_URL}/payment/${orderId}/status`,
+        `${API_BASE_URL}/orders/${orderId}/payment-status`, // PERUBAHAN DI SINI
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -466,7 +466,7 @@ export default function OrdersPage () {
           )
         }
 
-        if (requires_sync || payment_status === 'pending') {
+        if (requires_sync) {
           // Jika perlu sinkronisasi, jalankan sync
           setSuccessMessage(
             '🔄 Status membutuhkan sinkronisasi dengan Midtrans...'

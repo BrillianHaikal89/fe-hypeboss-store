@@ -463,22 +463,6 @@ export default function ProductModal({ isOpen, onClose, product, onSave, onTestS
               {/* Footer */}
               <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-between gap-3">
                 <div className="flex space-x-3">
-                  {/* Tombol Testing untuk Edit Mode */}
-                  {product?.id && (
-                    <button
-                      type="button"
-                      onClick={handleTestStockReduction}
-                      disabled={isTestingStock || loading}
-                      className="px-4 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
-                    >
-                      {isTestingStock ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <TestTube className="w-4 h-4 mr-2" />
-                      )}
-                      Test Stok
-                    </button>
-                  )}
                 </div>
                 
                 <div className="flex space-x-3">
