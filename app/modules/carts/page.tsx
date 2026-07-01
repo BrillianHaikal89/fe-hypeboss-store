@@ -536,7 +536,7 @@ export default function CartPage() {
                   <div className="relative">
                     <input
                       type="checkbox"
-                      checked={cart && selectedItems.length === cart.items.length && cart.items.length > 0}
+                      checked={Boolean(cart && selectedItems.length === cart.items.length && cart.items.length > 0)}
                       onChange={toggleSelectAll}
                       className="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
                     />
