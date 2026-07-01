@@ -30,7 +30,6 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../../store/auth-store';
 import PaymentStatus from '../components/PaymentStatus';
-import QRPayment from '../components/QRPayment';
 
 interface OrderItem {
   id: number;
