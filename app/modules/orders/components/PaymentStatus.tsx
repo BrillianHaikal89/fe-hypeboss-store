@@ -1,4 +1,4 @@
-// app/modules/orders/confirmation/page.tsx
+// app/modules/orders/components/PaymentStatus.tsx
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
@@ -29,7 +29,94 @@ import {
   Check
 } from 'lucide-react';
 import { useAuthStore } from '../../../store/auth-store';
-import PaymentStatus from '../components/PaymentStatus';
+// Hapus import PaymentStatus yang bermasalah
+// import PaymentStatus from '../components/PaymentStatus';
+
+// Definisikan komponen PaymentStatus di sini
+interface PaymentStatusProps {
+  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' | 'challenge' | 'expired';
+}
+
+const PaymentStatusComponent: React.FC<PaymentStatusProps> = ({ orderStatus, paymentStatus }) => {
+  const getStatusColor = (status: string) => {
+    const colors = {
+      pending: 'bg-yellow-500',
+      processing: 'bg-blue-500',
+      shipped: 'bg-indigo-500',
+      delivered: 'bg-green-500',
+      cancelled: 'bg-red-500',
+      paid: 'bg-emerald-500',
+      failed: 'bg-red-500',
+      refunded: 'bg-purple-500',
+      challenge: 'bg-orange-500',
+      expired: 'bg-gray-500'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-500';
+  };
+
+  const getStatusText = (status: string) => {
+    const texts = {
+      pending: 'Menunggu',
+      processing: 'Diproses',
+      shipped: 'Dikirim',
+      delivered: 'Sampai',
+      cancelled: 'Dibatalkan',
+      paid: 'Lunas',
+      failed: 'Gagal',
+      refunded: 'Dikembalikan',
+      challenge: 'Challenge',
+      expired: 'Kadaluarsa'
+    };
+    return texts[status as keyof typeof texts] || status;
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch(status) {
+      case 'pending':
+      case 'paid':
+      case 'processing':
+        return <Clock className="w-5 h-5" />;
+      case 'shipped':
+      case 'delivered':
+        return <Truck className="w-5 h-5" />;
+      case 'cancelled':
+      case 'failed':
+      case 'expired':
+        return <XCircle className="w-5 h-5" />;
+      default:
+        return <Package className="w-5 h-5" />;
+    }
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex-1 bg-gray-50 p-4 rounded-lg">
+        <p className="text-sm text-gray-600 mb-1">Status Pesanan</p>
+        <div className="flex items-center gap-2">
+          <div className={`p-2 rounded-full text-white ${getStatusColor(orderStatus)}`}>
+            {getStatusIcon(orderStatus)}
+          </div>
+          <span className="font-semibold text-gray-900">
+            {getStatusText(orderStatus)}
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex-1 bg-gray-50 p-4 rounded-lg">
+        <p className="text-sm text-gray-600 mb-1">Status Pembayaran</p>
+        <div className="flex items-center gap-2">
+          <div className={`p-2 rounded-full text-white ${getStatusColor(paymentStatus)}`}>
+            {getStatusIcon(paymentStatus)}
+          </div>
+          <span className="font-semibold text-gray-900">
+            {getStatusText(paymentStatus)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface OrderItem {
   id: number;
@@ -374,7 +461,6 @@ export default function ConfirmationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white print:bg-white">
       
-
       {/* Notification Container */}
       <div className="container mx-auto px-4 py-4 print:hidden">
         {(error || successMessage) && (
@@ -510,7 +596,7 @@ export default function ConfirmationPage() {
               <div className="lg:col-span-2 space-y-6 print:space-y-4">
                 {/* Order Status */}
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 print:border-0 print:shadow-none print:p-4">
-                  <PaymentStatus 
+                  <PaymentStatusComponent 
                     orderStatus={orderData.order_status}
                     paymentStatus={orderData.payment_status}
                   />
