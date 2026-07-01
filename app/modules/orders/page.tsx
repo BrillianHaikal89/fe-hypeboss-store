@@ -1,7 +1,7 @@
 // app/modules/orders/page.tsx
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import PaymentStatus from './components/PaymentStatus'
@@ -150,7 +150,7 @@ declare global {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
 
-export default function OrdersPage () {
+function OrdersContent () {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated, token, user } = useAuthStore()
@@ -2013,5 +2013,22 @@ export default function OrdersPage () {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function OrdersPage () {
+  return (
+    <Suspense
+      fallback={
+        <div className='min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center'>
+          <div className='text-center'>
+            <Loader2 className='w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4' />
+            <p className='text-gray-600'>Memuat data pesanan...</p>
+          </div>
+        </div>
+      }
+    >
+      <OrdersContent />
+    </Suspense>
   )
 }
