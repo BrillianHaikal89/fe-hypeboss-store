@@ -172,7 +172,7 @@ export default function OrdersPage () {
   const [isSyncing, setIsSyncing] = useState(false) // Tambah state ini
 
   const [formData, setFormData] = useState({
-    shipping_address: user?.address || '',
+    shipping_address: (user as any)?.address || '',
     shipping_phone: user?.phone || '',
     notes: '',
     shipping_cost: 10500,
@@ -710,7 +710,7 @@ export default function OrdersPage () {
         setFormData(prev => ({
           ...prev,
           shipping_phone: user.phone || '',
-          shipping_address: user.address || ''
+          shipping_address: (user as any).address || ''
         }))
       }
 
