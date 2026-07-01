@@ -1,5 +1,6 @@
 'use client'
 
+import { ReactElement } from 'react'
 import { ChevronRight, Eye, Download, CreditCard, MapPin } from 'lucide-react'
 import { Order } from '../types/order'
 
@@ -8,7 +9,7 @@ interface OrderCardProps {
   onViewDetail: (order: Order) => void
   onDownloadInvoice: (order: Order) => void
   getStatusColor: (status: string) => string
-  getStatusIcon: (status: string) => JSX.Element
+  getStatusIcon: (status: string) => ReactElement
   getStatusText: (status: string) => string
   formatRupiah: (amount: string | number) => string
   formatDate: (dateString: string) => string
