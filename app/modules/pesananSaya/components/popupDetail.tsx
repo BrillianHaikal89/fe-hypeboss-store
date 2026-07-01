@@ -1,5 +1,6 @@
 'use client'
 
+import { ReactElement } from 'react'
 import { X, Download, MapPin, Phone, CreditCard } from 'lucide-react'
 
 interface OrderItem {
@@ -53,7 +54,7 @@ interface PopupDetailProps {
   isOpen: boolean
   onClose: () => void
   getStatusColor: (status: string) => string
-  getStatusIcon: (status: string) => JSX.Element
+  getStatusIcon: (status: string) => ReactElement
   getStatusText: (status: string) => string
   formatRupiah: (amount: string | number) => string
   formatDate: (dateString: string) => string
