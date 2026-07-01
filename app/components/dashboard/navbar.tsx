@@ -287,9 +287,9 @@ export default function DashboardNavbar() {
                   className='flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg text-gray-900'
                 >
                   <div className='w-8 h-8 bg-green-100 rounded-full flex items-center justify-center'>
-                    {user?.avatar ? (
+                    {(user as typeof user & { avatar?: string })?.avatar ? (
                       <img 
-                        src={user.avatar} 
+                        src={(user as typeof user & { avatar?: string }).avatar} 
                         alt={user.full_name}
                         className='w-full h-full rounded-full object-cover'
                       />
