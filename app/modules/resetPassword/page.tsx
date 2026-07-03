@@ -72,7 +72,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3001/api/auth/password/reset/request", {
+      const response = await fetch("https://be-hypeboss-store-fawn.vercel.app/api/auth/password/reset/request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3001/api/auth/password/reset/verify-otp", {
+      const response = await fetch("https://be-hypeboss-store-fawn.vercel.app/api/auth/password/reset/verify-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +175,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3001/api/auth/password/reset/confirm", {
+      const response = await fetch("https://be-hypeboss-store-fawn.vercel.app/api/auth/password/reset/confirm", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -215,7 +215,7 @@ export default function ResetPasswordPage() {
     setTimer(600);
 
     try {
-      const response = await fetch("http://localhost:3001/api/auth/password/reset/request", {
+      const response = await fetch("https://be-hypeboss-store-fawn.vercel.app/api/auth/password/reset/request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

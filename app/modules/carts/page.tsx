@@ -63,7 +63,7 @@ interface CheckoutData {
   timestamp: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://be-hypeboss-store-fawn.vercel.app/api';
 
 export default function CartPage() {
   const router = useRouter();

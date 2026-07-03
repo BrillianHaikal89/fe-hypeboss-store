@@ -100,7 +100,7 @@ export default function DashboardCustomer ({
 
   const fetchCartCount = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/carts/summary', {
+      const response = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/carts/summary', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -174,7 +174,7 @@ export default function DashboardCustomer ({
         quantity: quantity
       }
 
-      const response = await fetch('http://localhost:3001/api/carts', {
+      const response = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/carts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

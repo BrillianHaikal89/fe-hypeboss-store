@@ -51,7 +51,7 @@ export default function PesananSayaPage() {
       setIsLoading(true)
       setError(null)
       
-      const response = await fetch('http://localhost:3001/api/orders/user', {
+      const response = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/orders/user', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

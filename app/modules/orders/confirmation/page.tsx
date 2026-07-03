@@ -49,7 +49,7 @@ interface OrderData {
   items: OrderItem[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://be-hypeboss-store-fawn.vercel.app/api';
 
 function ConfirmationContent() {
   const router = useRouter();

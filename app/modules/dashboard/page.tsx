@@ -80,7 +80,7 @@ export default function DashboardPage() {
         setIsLoadingData(true)
         
         // Fetch produk aktif
-        const productsResponse = await fetch('http://localhost:3001/api/products')
+        const productsResponse = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/products')
         const productsData = await productsResponse.json()
         
         if (productsData.success) {
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         }
 
         // Fetch kategori aktif
-        const categoriesResponse = await fetch('http://localhost:3001/api/categories')
+        const categoriesResponse = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/categories')
         const categoriesData = await categoriesResponse.json()
         
         if (categoriesData.success) {

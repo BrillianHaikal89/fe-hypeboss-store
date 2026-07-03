@@ -92,7 +92,7 @@ export default function DashboardNavbar() {
   const fetchQuickStats = async () => {
     try {
       setIsLoadingStats(true)
-      const response = await fetch('http://localhost:3001/api/stats/quick')
+      const response = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/stats/quick')
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
@@ -113,7 +113,7 @@ export default function DashboardNavbar() {
   // Fungsi untuk mendapatkan jumlah item di keranjang
   const fetchCartCount = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/carts/summary', {
+      const response = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/carts/summary', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

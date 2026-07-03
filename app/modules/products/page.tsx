@@ -91,7 +91,7 @@ export default function ProductsPage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   // BASE URL untuk API
-  const API_BASE_URL = "http://localhost:3001/api";
+  const API_BASE_URL = "https://be-hypeboss-store-fawn.vercel.app/api";
 
   // Fungsi untuk menampilkan notifikasi
   const showNotification = (message: string, type: NotificationType = 'success') => {

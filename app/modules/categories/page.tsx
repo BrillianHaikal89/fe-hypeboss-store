@@ -121,19 +121,19 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      let url = "http://localhost:3001/api/categories";
+      let url = "https://be-hypeboss-store-fawn.vercel.app/api/categories";
       
       // Tentukan endpoint berdasarkan filter
       switch (filterType) {
         case 'all':
-          url = "http://localhost:3001/api/categories?showInactive=true";
+          url = "https://be-hypeboss-store-fawn.vercel.app/api/categories?showInactive=true";
           break;
         case 'inactive':
-          url = "http://localhost:3001/api/categories?status=false";
+          url = "https://be-hypeboss-store-fawn.vercel.app/api/categories?status=false";
           break;
         case 'active':
         default:
-          url = "http://localhost:3001/api/categories?status=true";
+          url = "https://be-hypeboss-store-fawn.vercel.app/api/categories?status=true";
           break;
       }
       
@@ -201,8 +201,8 @@ export default function CategoriesPage() {
       }
 
       const url = editingCategory 
-        ? `http://localhost:3001/api/categories/${editingCategory.id}`
-        : "http://localhost:3001/api/categories";
+        ? `https://be-hypeboss-store-fawn.vercel.app/api/categories/${editingCategory.id}`
+        : "https://be-hypeboss-store-fawn.vercel.app/api/categories";
       
       const method = editingCategory ? "PUT" : "POST";
 
@@ -235,7 +235,7 @@ export default function CategoriesPage() {
   const handleEdit = async (category: Category) => {
     try {
       // Fetch detail kategori termasuk yang nonaktif
-      const response = await fetch(`http://localhost:3001/api/categories/${category.id}?showInactive=true`);
+      const response = await fetch(`https://be-hypeboss-store-fawn.vercel.app/api/categories/${category.id}?showInactive=true`);
       const data = await response.json();
       
       if (data.success) {
@@ -265,7 +265,7 @@ export default function CategoriesPage() {
     if (!categoryToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/categories/${categoryToDelete.id}`, {
+      const response = await fetch(`https://be-hypeboss-store-fawn.vercel.app/api/categories/${categoryToDelete.id}`, {
         method: "DELETE",
       });
 
@@ -292,7 +292,7 @@ export default function CategoriesPage() {
       formData.append("description", category.description);
       formData.append("is_active", (!category.is_active).toString());
 
-      const response = await fetch(`http://localhost:3001/api/categories/${category.id}`, {
+      const response = await fetch(`https://be-hypeboss-store-fawn.vercel.app/api/categories/${category.id}`, {
         method: "PUT",
         body: formData,
       });

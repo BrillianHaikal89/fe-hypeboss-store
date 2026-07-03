@@ -30,7 +30,7 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ isOpen, onClose, product, onSave, onTestStockReduction }: ProductModalProps) {
-  const API_BASE_URL = "http://localhost:3001/api";
+  const API_BASE_URL = "https://be-hypeboss-store-fawn.vercel.app/api";
   
   const [formData, setFormData] = useState<Product>({
     name: "",

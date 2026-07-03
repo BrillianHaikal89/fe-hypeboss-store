@@ -228,7 +228,7 @@ export default function RegisterPage () {
     setSuccessMessage('')
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
+      const response = await fetch('https://be-hypeboss-store-fawn.vercel.app/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -279,7 +279,7 @@ export default function RegisterPage () {
 
     try {
       const response = await fetch(
-        'http://localhost:3001/api/auth/resend-otp',
+        'https://be-hypeboss-store-fawn.vercel.app/api/auth/resend-otp',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -328,7 +328,7 @@ export default function RegisterPage () {
       const token = localStorage.getItem('register_token')
 
       const response = await fetch(
-        'http://localhost:3001/api/auth/verify-otp',
+        'https://be-hypeboss-store-fawn.vercel.app/api/auth/verify-otp',
         {
           method: 'POST',
           headers: {
